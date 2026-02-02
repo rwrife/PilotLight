@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E3A2A3B1-5A9C-4F0A-9A4E-7D3B9A6F7C01}</ProjectGuid>
+    <Keyword>MFCProj</Keyword>
+    <RootNamespace>PilotLight</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <!-- Debug -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <!-- Release -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>
+        _DEBUG;WIN32;_WINDOWS;_AFXDLL;%(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>crypt32.lib;shell32.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>
+        NDEBUG;WIN32;_WINDOWS;_AFXDLL;%(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>crypt32.lib;shell32.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- Source Files -->
+  <ItemGroup>
+    <ClCompile Include="PilotLight.cpp" />
+    <ClCompile Include="MainDlg.cpp" />
+    <ClCompile Include="BorderlessFrame.cpp" />
+    <ClCompile Include="ChatEngine.cpp" />
+    <ClCompile Include="OpenAIClient.cpp" />
+    <ClCompile Include="Theme.cpp" />
+    <ClCompile Include="ChatMessage.cpp" />
+    <ClCompile Include="ChatHistory.cpp" />
+    <ClCompile Include="JsonBuilder.cpp" />
+    <ClCompile Include="FileUtils.cpp" />
+    <ClCompile Include="RichTextRenderer.cpp" />
+  </ItemGroup>
+  <!-- Headers -->
+  <ItemGroup>
+    <ClInclude Include="MainDlg.h" />
+    <ClInclude Include="BorderlessFrame.h" />
+    <ClInclude Include="ChatEngine.h" />
+    <ClInclude Include="OpenAIClient.h" />
+    <ClInclude Include="Theme.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="ChatMessage.h" />
+    <ClInclude Include="ChatHistory.h" />
+    <ClInclude Include="JsonBuilder.h" />
+    <ClInclude Include="FileUtils.h" />
+    <ClInclude Include="RichTextRenderer.h" />
+  </ItemGroup>
+  <!-- Resources -->
+  <ItemGroup>
+    <ResourceCompile Include="PilotLight.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

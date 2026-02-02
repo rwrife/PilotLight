@@ -1,0 +1,119 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_PILOTLIGHT          ICON                    "PilotLight.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN_DIALOG DIALOGEX 0, 0, 800, 600
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "PilotLight"
+FONT 10, "Segoe UI", 400, 0, 0x0
+BEGIN
+    ICON            IDI_PILOTLIGHT,IDC_APP_ICON,7,7,20,20,SS_ICON
+    LTEXT           "PilotLight",IDC_TITLEBAR,32,7,675,30
+    PUSHBUTTON      "",IDC_BTN_MINIMIZE,707,7,30,30,BS_OWNERDRAW
+    PUSHBUTTON      "",IDC_BTN_MAXIMIZE,737,7,30,30,BS_OWNERDRAW
+    PUSHBUTTON      "",IDC_BTN_CLOSE,767,7,30,30,BS_OWNERDRAW
+    CONTROL         "",IDC_CHAT,"RichEdit20W",ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_TABSTOP,7,45,790,460
+    EDITTEXT        IDC_INPUT,7,515,650,70,ES_MULTILINE | ES_AUTOVSCROLL | WS_TABSTOP
+    PUSHBUTTON      "",IDC_BTN_SEND,665,515,60,70,BS_OWNERDRAW
+    PUSHBUTTON      "",IDC_BTN_ATTACH,733,515,60,30,BS_OWNERDRAW
+    LISTBOX         IDC_ATTACHMENT_LIST,733,550,60,35,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_MAIN_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 0
+        RIGHTMARGIN, 793
+        TOPMARGIN, 0
+        BOTTOMMARGIN, 593
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_MAIN_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
