@@ -1,9 +1,29 @@
 #include "BorderlessFrame.h"
+#include <dwmapi.h>
+
+#pragma comment(lib, "dwmapi.lib")
 
 void CBorderlessFrame::Apply(CWnd* wnd)
 {
-    wnd->ModifyStyle(WS_OVERLAPPEDWINDOW, WS_POPUP);
-    wnd->ModifyStyleEx(WS_EX_CLIENTEDGE, WS_EX_APPWINDOW);
+    // Remove standard window styles
+    wnd->ModifyStyle(WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_THICKFRAME, WS_POPUP | WS_THICKFRAME);
+    wnd->ModifyStyleEx(WS_EX_CLIENTEDGE | WS_EX_DLGMODALFRAME | WS_EX_STATICEDGE, WS_EX_APPWINDOW);
+
+    // Extend frame into client area to remove the visible border
+    MARGINS margins = { 0, 0, 0, 1 };  // Minimal extension to enable DWM
+    DwmExtendFrameIntoClientArea(wnd->GetSafeHwnd(), &margins);
+
+    // Disable non-client rendering to remove the gray border
+    DWMNCRENDERINGPOLICY policy = DWMNCRP_DISABLED;
+    DwmSetWindowAttribute(wnd->GetSafeHwnd(), DWMWA_NCRENDERING_POLICY, &policy, sizeof(policy));
+
+    // Optional: Set window corner preference (Windows 11)
+    DWM_WINDOW_CORNER_PREFERENCE corner = DWMWCP_ROUND;
+    DwmSetWindowAttribute(wnd->GetSafeHwnd(), DWMWA_WINDOW_CORNER_PREFERENCE, &corner, sizeof(corner));
+
+    // Force a frame change to apply the new styles
+    wnd->SetWindowPos(nullptr, 0, 0, 0, 0,
+        SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
 }
 
 void CBorderlessFrame::UpdateRegion(CWnd* wnd, int radius)

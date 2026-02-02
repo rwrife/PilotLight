@@ -62,6 +62,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BTN_SEND, &CMainDlg::OnSendMessage)
     ON_BN_CLICKED(IDC_BTN_ATTACH, &CMainDlg::OnAttachFile)
     ON_BN_CLICKED(IDC_BTN_CLEAR_HISTORY, &CMainDlg::OnClearHistory)
+    ON_WM_NCCALCSIZE()
 END_MESSAGE_MAP()
 
 // Initialize dialog
@@ -214,7 +215,7 @@ void CMainDlg::LayoutControls()
     CRect clientRect;
     GetClientRect(&clientRect);
 
-    const int margin = 12;
+    const int margin = 16;
     const int titlebarHeight = 32;
     const int inputHeight = 80;
     const int buttonWidth = 38;
@@ -630,4 +631,14 @@ HBRUSH CMainDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
     default:
         return CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
     }
+}
+
+// Handle NC calc size to remove non-client area border
+void CMainDlg::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp)
+{
+    if (bCalcValidRects) {      
+        // Return without calling base class to remove non-client area entirely
+        return;
+    }
+    CDialogEx::OnNcCalcSize(bCalcValidRects, lpncsp);
 }
