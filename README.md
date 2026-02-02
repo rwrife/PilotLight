@@ -1,4 +1,4 @@
-# 🔥 PilotLight
+# <img src="logo.png" width="32px"> PilotLight
 
 PilotLight is an extremely lightweight, native Windows chat client built in C++ with MFC, designed to deliver modern usability with minimal memory, CPU, and disk footprint.
 
