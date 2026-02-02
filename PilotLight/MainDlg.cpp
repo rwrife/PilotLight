@@ -92,12 +92,12 @@ BOOL CMainDlg::OnInitDialog()
     m_btnSend.ModifyStyle(0, BS_OWNERDRAW);
     m_btnAttach.ModifyStyle(0, BS_OWNERDRAW);
 
-    // Set button text with simple Unicode symbols that render reliably
-    m_btnMinimize.SetWindowText(L"−");  // Minus sign
-    m_btnMaximize.SetWindowText(L"□");  // Square
-    m_btnClose.SetWindowText(L"×");     // Multiplication sign
-    m_btnSend.SetWindowText(L"↑");     // Up arrow
-    m_btnAttach.SetWindowText(L"📎");   // Paperclip
+    // Set button text using Unicode escape sequences for reliable matching
+    m_btnMinimize.SetWindowText(L"\u2212");  // Minus sign (U+2212)
+    m_btnMaximize.SetWindowText(L"\u25A1");  // White square (U+25A1)
+    m_btnClose.SetWindowText(L"\u00D7");     // Multiplication sign (U+00D7)
+    m_btnSend.SetWindowText(L"\u2191");      // Up arrow (U+2191)
+    m_btnAttach.SetWindowText(L"\U0001F4CE"); // Paperclip (U+1F4CE)
 
     // Set up chat display
     m_chat.SetFont(CFont::FromHandle(Theme::UIFont()));
