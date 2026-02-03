@@ -1,4 +1,4 @@
-#include "Theme.h"
+﻿#include "Theme.h"
 #include <afxwin.h>
 #include <string>
 
@@ -6,6 +6,18 @@ HFONT Theme::UIFont()
 {
     static HFONT hFont = CreateFontW(
         -18, 0, 0, 0,
+        FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+        CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        VARIABLE_PITCH, L"Segoe UI Variable"
+    );
+    return hFont;
+}
+
+HFONT Theme::TitleFont()
+{
+    static HFONT hFont = CreateFontW(
+        -24, 0, 0, 0,
         FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
         CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
@@ -74,7 +86,7 @@ void Theme::DrawFramelessButton(CDC* pDC, const CRect& rect, const wchar_t* text
         glyph = L"\uE724";  // Send
     }
     else if (firstChar == 0xD83D) {
-        // First part of paperclip emoji surrogate pair (?? is U+1F4CE)
+        // First part of paperclip emoji surrogate pair (📎 is U+1F4CE)
         glyph = L"\uE723";  // Attach
     }
     else {

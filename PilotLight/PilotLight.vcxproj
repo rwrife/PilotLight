@@ -79,6 +79,7 @@
     <ClCompile Include="JsonBuilder.cpp" />
     <ClCompile Include="FileUtils.cpp" />
     <ClCompile Include="RichTextRenderer.cpp" />
+    <ClCompile Include="ThemedRichEdit.cpp" />
   </ItemGroup>
   <!-- Headers -->
   <ItemGroup>
@@ -93,6 +94,7 @@
     <ClInclude Include="JsonBuilder.h" />
     <ClInclude Include="FileUtils.h" />
     <ClInclude Include="RichTextRenderer.h" />
+    <ClInclude Include="ThemedRichEdit.h" />
   </ItemGroup>
   <!-- Resources -->
   <ItemGroup>

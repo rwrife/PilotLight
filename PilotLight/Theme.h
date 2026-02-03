@@ -15,9 +15,14 @@ namespace Theme {
     constexpr COLORREF ChatBackground = RGB(44, 44, 44);       // #2C2C2C
     constexpr COLORREF Foreground = RGB(204, 204, 204);        // #CCCCCC
     constexpr COLORREF ActiveBorder = RGB(61, 116, 208);       // #3D74D0
-    constexpr COLORREF ButtonHover = RGB(45, 45, 45);          // Slightly lighter for hover
+    constexpr COLORREF ButtonHover = RGB(45, 45, 45);          // #2D2D2D - hover for minimize/maximize
     constexpr COLORREF ButtonPressed = RGB(25, 25, 25);        // Slightly darker for pressed
-    constexpr COLORREF CloseButtonHover = RGB(232, 17, 35);    // Red hover for close button
+    constexpr COLORREF CloseButtonHover = RGB(211, 58, 46);    // #D33A2E - Red hover for close button
+    
+    // Scrollbar colors
+    constexpr COLORREF ScrollbarTrack = RGB(50, 50, 50);       // #323232 - scrollbar track/background
+    constexpr COLORREF ScrollbarThumb = RGB(100, 100, 100);    // #646464 - scrollbar thumb (lighter gray)
+    constexpr COLORREF ScrollbarThumbHover = RGB(140, 140, 140); // #8C8C8C - scrollbar thumb hover
     
     // Legacy colors for compatibility
     constexpr COLORREF Background = RGB(30,30,30);
@@ -32,8 +37,9 @@ namespace Theme {
         Pressed
     };
 
-    // Font
+    // Fonts
     HFONT UIFont();
+    HFONT TitleFont();  // Larger font for titlebar
     
     // Button drawing helper functions
     void DrawFramelessButton(CDC* pDC, const CRect& rect, const wchar_t* emoji, 

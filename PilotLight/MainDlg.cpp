@@ -4,6 +4,9 @@
 #include "ChatEngine.h"
 #include "FileUtils.h"
 #include "RichTextRenderer.h"
+#include <commctrl.h>
+
+#pragma comment(lib, "comctl32.lib")
 
 // Constructor
 CMainDlg::CMainDlg(CWnd* pParent /*=nullptr*/)
@@ -56,6 +59,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_WM_MOUSELEAVE()
     ON_WM_CTLCOLOR()
     ON_WM_ERASEBKGND()
+    ON_WM_SETCURSOR()
     ON_BN_CLICKED(IDC_BTN_MINIMIZE, &CMainDlg::OnMinimize)
     ON_BN_CLICKED(IDC_BTN_MAXIMIZE, &CMainDlg::OnMaximize)
     ON_BN_CLICKED(IDC_BTN_CLOSE, &CMainDlg::OnClose)
@@ -63,6 +67,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BTN_ATTACH, &CMainDlg::OnAttachFile)
     ON_BN_CLICKED(IDC_BTN_CLEAR_HISTORY, &CMainDlg::OnClearHistory)
     ON_WM_NCCALCSIZE()
+    ON_WM_NCACTIVATE()
 END_MESSAGE_MAP()
 
 // Initialize dialog
@@ -82,7 +87,8 @@ BOOL CMainDlg::OnInitDialog()
     }
 
     // Set up titlebar
-    m_titlebar.SetFont(CFont::FromHandle(Theme::UIFont()));
+    m_titlebar.ModifyStyle(0, SS_CENTERIMAGE);  
+    m_titlebar.SetFont(CFont::FromHandle(Theme::TitleFont()));
     m_titlebar.SetWindowText(L"PilotLight");
 
     // Apply owner-draw style to buttons
@@ -100,9 +106,12 @@ BOOL CMainDlg::OnInitDialog()
     m_btnAttach.SetWindowText(L"\U0001F4CE"); // Paperclip (U+1F4CE)
 
     // Set up chat display
+    m_chat.ModifyStyleEx(WS_EX_CLIENTEDGE | WS_EX_STATICEDGE, 0);  // Remove 3D border
+    m_chat.ModifyStyle(WS_BORDER, 0);  // Remove standard border
     m_chat.SetFont(CFont::FromHandle(Theme::UIFont()));
     m_chat.SetReadOnly(TRUE);
     m_chat.SetBackgroundColor(FALSE, Theme::ChatBackground);
+    m_chat.InitThemedScrollbar();  // Initialize our custom themed scrollbar
 
     // Set up input
     m_input.SetFont(CFont::FromHandle(Theme::UIFont()));
@@ -121,8 +130,8 @@ BOOL CMainDlg::OnInitDialog()
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
     
     // Calculate window dimensions: 800px width, 75% of screen height
-    int windowWidth = 800;
-    int windowHeight = (screenHeight * 3) / 4;
+    int windowWidth = 900;
+    int windowHeight = (screenHeight * 2) / 4;
     
     // Center the window on screen
     int windowX = (screenWidth - windowWidth) / 2;
@@ -175,37 +184,37 @@ void CMainDlg::OnPaint()
 {
     CPaintDC dc(this);
     
-    // Fill background with dark theme color
+    // Fill main background with frame color
     CRect clientRect;
     GetClientRect(&clientRect);
     
     CBrush bgBrush(Theme::FrameBackground);
     dc.FillRect(&clientRect, &bgBrush);
     
-    // Draw rounded border around chat control
+    // Draw rounded rectangle background for the chat area
     if (m_chat.GetSafeHwnd()) {
-        CRect chatRect;
-        m_chat.GetWindowRect(&chatRect);
-        ScreenToClient(&chatRect);
+        // Calculate the outer chat area (larger than the actual control)
+        const int margin = 16;
+        const int titlebarHeight = 40;
+        const int inputHeight = 80;
         
-        // Expand rect slightly for border
-        chatRect.InflateRect(1, 1);
-        DrawRoundedBorder(&dc, chatRect, 8, Theme::Foreground);
+        CRect chatBgRect(margin, titlebarHeight + margin,
+                         clientRect.right - margin, clientRect.bottom - inputHeight - margin * 2);
+        
+        // Draw a filled rounded rectangle as the chat background
+        CBrush chatBgBrush(Theme::ChatBackground);
+        CPen pen(PS_SOLID, 1, Theme::ChatBackground);  // Same color as fill (no visible border)
+        CPen* pOldPen = dc.SelectObject(&pen);
+        CBrush* pOldBrush = dc.SelectObject(&chatBgBrush);
+        
+        // 20px corner radius
+        dc.RoundRect(chatBgRect, CPoint(20, 20));
+        
+        dc.SelectObject(pOldBrush);
+        dc.SelectObject(pOldPen);
     }
 }
 
-// Draw rounded border helper
-void CMainDlg::DrawRoundedBorder(CDC* pDC, const CRect& rect, int radius, COLORREF color)
-{
-    CPen pen(PS_SOLID, 1, color);
-    CPen* pOldPen = pDC->SelectObject(&pen);
-    CBrush* pOldBrush = (CBrush*)pDC->SelectStockObject(NULL_BRUSH);
-    
-    pDC->RoundRect(rect, CPoint(radius, radius));
-    
-    pDC->SelectObject(pOldBrush);
-    pDC->SelectObject(pOldPen);
-}
 
 // Layout all controls
 void CMainDlg::LayoutControls()
@@ -216,41 +225,52 @@ void CMainDlg::LayoutControls()
     GetClientRect(&clientRect);
 
     const int margin = 16;
-    const int titlebarHeight = 32;
+    const int titlebarHeight = 40;   // Taller titlebar for larger icon/text
+    const int buttonHeight = 32;     // Keep buttons same height
     const int inputHeight = 80;
-    const int buttonWidth = 38;
+    const int buttonWidth = 46;      // Wider buttons for edge-to-edge look
     const int sideControlWidth = 70;
-    const int iconSize = 20;
-    const int iconMargin = 8;
+    const int iconSize = 32;         // Larger icon
+    const int iconMargin = 5;
 
-    // App icon (position it properly)
-    CRect iconRect(margin, margin + (titlebarHeight - iconSize) / 2, 
-                   margin + iconSize, margin + (titlebarHeight - iconSize) / 2 + iconSize);
+    // App icon (vertically centered in titlebar)
+    int iconTop = (titlebarHeight - iconSize) / 2;
+    CRect iconRect(margin, iconTop, margin + iconSize, iconTop + iconSize);
     m_appIcon.MoveWindow(&iconRect);
 
-    // Titlebar text - start after the icon
+    // Titlebar text - start after the icon, aligned with icon vertically
     int titleLeft = margin + iconSize + iconMargin;
-    CRect titlebarRect(titleLeft, margin, clientRect.right - 3 * buttonWidth - margin * 2, margin + titlebarHeight);
+    int titleTop = iconTop;  // Align with icon top
+    CRect titlebarRect(titleLeft, titleTop, clientRect.right - 3 * buttonWidth, titlebarHeight);
     m_titlebar.MoveWindow(&titlebarRect);
 
-    // Titlebar buttons (right-aligned)
-    CRect btnMinimizeRect(clientRect.right - 3 * buttonWidth - margin, margin, 
-                          clientRect.right - 2 * buttonWidth - margin, margin + titlebarHeight);
+    // Titlebar buttons (right-aligned, flush with top-right, smaller height)
+    int buttonTop = (titlebarHeight - buttonHeight) / 2;  // Center buttons vertically
+    CRect btnMinimizeRect(clientRect.right - 3 * buttonWidth, 0, 
+                          clientRect.right - 2 * buttonWidth, buttonHeight);
     m_btnMinimize.MoveWindow(&btnMinimizeRect);
 
-    CRect btnMaximizeRect(clientRect.right - 2 * buttonWidth - margin, margin,
-                          clientRect.right - buttonWidth - margin, margin + titlebarHeight);
+    CRect btnMaximizeRect(clientRect.right - 2 * buttonWidth, 0,
+                          clientRect.right - buttonWidth, buttonHeight);
     m_btnMaximize.MoveWindow(&btnMaximizeRect);
 
-    CRect btnCloseRect(clientRect.right - buttonWidth - margin, margin,
-                       clientRect.right - margin, margin + titlebarHeight);
+    CRect btnCloseRect(clientRect.right - buttonWidth, 0,
+                       clientRect.right, buttonHeight);
     m_btnClose.MoveWindow(&btnCloseRect);
 
-    // Chat display - leave room on right for input controls
+    // Chat display - position with padding inside the rounded background area
     int chatRight = clientRect.right - margin;
-    CRect chatRect(margin, margin + titlebarHeight + margin,
-                   chatRight, clientRect.bottom - inputHeight - margin * 2);
+    int cornerPadding = 8;  // Padding to keep text away from rounded corners
+    CRect chatRect(margin + cornerPadding, titlebarHeight + margin + cornerPadding,
+                   chatRight - cornerPadding, clientRect.bottom - inputHeight - margin * 2 - cornerPadding);
     m_chat.MoveWindow(&chatRect);
+
+    // Update internal padding for the chat control after resize
+    // Leave extra space on right for the custom scrollbar (12px scrollbar width)
+    CRect chatClientRect;
+    m_chat.GetClientRect(&chatClientRect);
+    chatClientRect.DeflateRect(8, 8, 16, 8);  // Internal padding plus scrollbar space
+    m_chat.SetRect(&chatClientRect);
 
     // Calculate button widths
     const int sendWidth = 70;
@@ -641,4 +661,41 @@ void CMainDlg::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp)
         return;
     }
     CDialogEx::OnNcCalcSize(bCalcValidRects, lpncsp);
+}
+
+// Handle NC activate to prevent default Windows title bar rendering
+BOOL CMainDlg::OnNcActivate(BOOL bActive)
+{
+    // Return TRUE to prevent Windows from drawing the default non-client area
+    // This stops the ghosted title bar from appearing when the window loses focus
+    // We still need to redraw our custom frame
+    RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+    return TRUE;
+}
+
+// Handle set cursor to track mouse over child controls for hover effects
+BOOL CMainDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+    // Get the control ID of the window under the cursor
+    int ctrlID = pWnd->GetDlgCtrlID();
+    
+    // List of buttons we track hover for
+    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH };
+    
+    // Reset all button states first
+    for (int buttonID : buttons) {
+        if (buttonID != ctrlID) {
+            UpdateButtonState(buttonID, Theme::ButtonState::Normal);
+        }
+    }
+    
+    // Set hover state for the button under cursor
+    for (int buttonID : buttons) {
+        if (buttonID == ctrlID) {
+            UpdateButtonState(buttonID, Theme::ButtonState::Hover);
+            break;
+        }
+    }
+    
+    return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
 }

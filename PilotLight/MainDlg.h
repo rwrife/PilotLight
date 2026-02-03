@@ -9,6 +9,7 @@
 #include "resource.h"
 #include "ChatMessage.h"
 #include "Theme.h"
+#include "ThemedRichEdit.h"
 #include <vector>
 
 // Forward declarations
@@ -44,6 +45,8 @@ protected:
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
     afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp);
+    afx_msg BOOL OnNcActivate(BOOL bActive);
+    afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 
     DECLARE_MESSAGE_MAP()
 
@@ -54,7 +57,7 @@ private:
     CButton m_btnMinimize;
     CButton m_btnMaximize;
     CButton m_btnClose;
-    CRichEditCtrl m_chat;
+    CThemedRichEdit m_chat;  // Use themed RichEdit with custom scrollbar
     CEdit m_input;
     CButton m_btnSend;
     CButton m_btnAttach;

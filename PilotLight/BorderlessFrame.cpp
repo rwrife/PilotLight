@@ -5,12 +5,12 @@
 
 void CBorderlessFrame::Apply(CWnd* wnd)
 {
-    // Remove standard window styles
-    wnd->ModifyStyle(WS_OVERLAPPEDWINDOW | WS_CAPTION | WS_THICKFRAME, WS_POPUP | WS_THICKFRAME);
+    // Remove standard window styles - keep WS_THICKFRAME for resizing but remove caption
+    wnd->ModifyStyle(WS_CAPTION | WS_SYSMENU, WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
     wnd->ModifyStyleEx(WS_EX_CLIENTEDGE | WS_EX_DLGMODALFRAME | WS_EX_STATICEDGE, WS_EX_APPWINDOW);
 
-    // Extend frame into client area to remove the visible border
-    MARGINS margins = { 0, 0, 0, 1 };  // Minimal extension to enable DWM
+    // Set margins to 0 - no DWM frame extension
+    MARGINS margins = { 0, 0, 0, 0 };
     DwmExtendFrameIntoClientArea(wnd->GetSafeHwnd(), &margins);
 
     // Disable non-client rendering to remove the gray border
