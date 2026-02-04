@@ -7,13 +7,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        target:
-          - name: x86
-            msbuildPlatform: Win32
-          - name: ARM
-            msbuildPlatform: ARM
 
     steps:
       - uses: actions/checkout@v4
@@ -21,14 +14,14 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build Release (${{ matrix.name }})
+      - name: Build Release (x86)
         run: |
-          msbuild PilotLight/PilotLight.vcxproj /p:Configuration=Release /p:Platform=${{ matrix.msbuildPlatform }}
+          msbuild PilotLight/PilotLight.vcxproj /p:Configuration=Release /p:Platform=Win32
         shell: cmd
 
-      - name: Upload EXE (${{ matrix.name }})
+      - name: Upload EXE (x86)
         uses: actions/upload-artifact@v4
         with:
-          name: PilotLight-${{ matrix.name }}
+          name: PilotLight-x86
           path: |
-            **\\${{ matrix.msbuildPlatform }}\\Release\\PilotLight.exe
+            **\\Win32\\Release\\PilotLight.exe
