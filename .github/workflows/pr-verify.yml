@@ -1,15 +1,22 @@
-name: Build PilotLight
+name: PR Build and Windows Verification
 
 on:
-  push:
   pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - 'cron/**'
+  workflow_dispatch: {}
 
 jobs:
-  build:
+  build-and-package:
+    name: Build Release and Upload EXE
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -19,9 +26,8 @@ jobs:
           msbuild PilotLight/PilotLight.vcxproj /p:Configuration=Release /p:Platform=Win32
         shell: cmd
 
-      - name: Upload EXE (x86)
+      - name: Upload Release EXE
         uses: actions/upload-artifact@v4
         with:
           name: PilotLight-x86
-          path: |
-            **/Release/PilotLight.exe
+          path: '**/Release/PilotLight.exe'
