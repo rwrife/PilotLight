@@ -30,4 +30,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PilotLight-x86
-          path: '**\\Win32\\Release\\PilotLight.exe'
+          path: '**/Release/PilotLight.exe'

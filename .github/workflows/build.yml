@@ -24,4 +24,4 @@ jobs:
         with:
           name: PilotLight-x86
           path: |
-            **\\Win32\\Release\\PilotLight.exe
+            **/Release/PilotLight.exe
