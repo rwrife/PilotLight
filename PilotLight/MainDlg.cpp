@@ -410,21 +410,20 @@ void CMainDlg::OnClearHistory()
 void CMainDlg::AppendChatMessage(const ChatMessage& msg)
 {
     std::wstring prefix;
-    COLORREF color;
+    COLORREF bubbleColor;
 
     if (msg.role == ChatMessage::Role::User) {
         prefix = L"You: ";
-        color = Theme::Accent;
+        bubbleColor = Theme::Accent;
     } else if (msg.role == ChatMessage::Role::Assistant) {
         prefix = L"Assistant: ";
-        color = Theme::Text;
+        bubbleColor = RGB(60, 60, 60);
     } else {
         prefix = L"System: ";
-        color = RGB(180, 180, 180);
+        bubbleColor = RGB(100, 100, 100);
     }
 
-    RichTextRenderer::AppendFormattedText(m_chat, prefix, color);
-    RichTextRenderer::AppendFormattedText(m_chat, msg.content + L"\r\n\r\n", Theme::Text);
+    RichTextRenderer::AppendBubble(m_chat, prefix + msg.content, Theme::Text, bubbleColor);
     RichTextRenderer::ScrollToBottom(m_chat);
 }
 
