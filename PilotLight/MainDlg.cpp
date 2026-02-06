@@ -2,9 +2,11 @@
 #include "BorderlessFrame.h"
 #include "Theme.h"
 #include "ChatEngine.h"
+#include "SettingsStore.h"
 #include "FileUtils.h"
 #include "RichTextRenderer.h"
 #include <commctrl.h>
+#include <algorithm>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -17,7 +19,9 @@ CMainDlg::CMainDlg(CWnd* pParent /*=nullptr*/)
     , m_btnCloseState(Theme::ButtonState::Normal)
     , m_btnSendState(Theme::ButtonState::Normal)
     , m_btnAttachState(Theme::ButtonState::Normal)
+    , m_btnSettingsState(Theme::ButtonState::Normal)
     , m_bTrackingMouse(FALSE)
+    , m_settingsVisible(false)
 {
     m_chatEngine = new ChatEngine();
     m_bgBrush.CreateSolidBrush(Theme::FrameBackground);
@@ -65,6 +69,9 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BTN_CLOSE, &CMainDlg::OnClose)
     ON_BN_CLICKED(IDC_BTN_SEND, &CMainDlg::OnSendMessage)
     ON_BN_CLICKED(IDC_BTN_ATTACH, &CMainDlg::OnAttachFile)
+    ON_BN_CLICKED(IDC_BTN_SETTINGS, &CMainDlg::OnSettingsButton)
+    ON_BN_CLICKED(IDC_BTN_CLOSE_SETTINGS, &CMainDlg::OnSettingsClose)
+    ON_BN_CLICKED(IDC_SETTINGS_STUB_TOGGLE, &CMainDlg::OnStubToggle)
     ON_BN_CLICKED(IDC_BTN_CLEAR_HISTORY, &CMainDlg::OnClearHistory)
     ON_WM_NCCALCSIZE()
     ON_WM_NCACTIVATE()
@@ -124,6 +131,34 @@ BOOL CMainDlg::OnInitDialog()
     m_tooltip.AddTool(&m_btnClose, L"Close");
     m_tooltip.AddTool(&m_btnSend, L"Send Message");
     m_tooltip.AddTool(&m_btnAttach, L"Attach Files");
+
+    // Settings button & overlay
+    if (!m_btnSettings.GetSafeHwnd()) {
+        m_btnSettings.Create(L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, CRect(0, 0, 32, 32), this, IDC_BTN_SETTINGS);
+    }
+    m_btnSettings.SetWindowText(L"\u2699");
+    m_btnSettings.ModifyStyle(0, BS_OWNERDRAW);
+    m_btnSettings.SetFont(CFont::FromHandle(Theme::TitleFont()));
+    m_tooltip.AddTool(&m_btnSettings, L"Settings");
+
+    m_settingsOverlay.Create(L"", WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 0);
+    m_settingsOverlay.ShowWindow(SW_HIDE);
+    m_settingsPanel.Create(L"", WS_CHILD | WS_VISIBLE | WS_BORDER, CRect(0, 0, 0, 0), this, 0);
+    m_settingsPanel.ShowWindow(SW_HIDE);
+    m_settingsTitle.Create(L"Settings & Sample Data", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), this, 0);
+    m_settingsTitle.SetFont(CFont::FromHandle(Theme::TitleFont()));
+    m_settingsTitle.ShowWindow(SW_HIDE);
+    m_settingsApiKeyLabel.Create(L"OpenAI API Key", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), this, IDC_STATIC);
+    m_settingsApiKeyLabel.ShowWindow(SW_HIDE);
+    m_settingsApiKey.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, IDC_SETTINGS_APIKEY);
+    m_settingsApiKey.ShowWindow(SW_HIDE);
+    m_settingsApiKey.LimitText(256);
+    m_settingsStubToggle.Create(L"Enable stub/sample-data mode", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, CRect(0, 0, 0, 0), this, IDC_SETTINGS_STUB_TOGGLE);
+    m_settingsStubToggle.ShowWindow(SW_HIDE);
+    m_settingsStubHint.Create(L"Stub responses help exercise the UI without calling a real LLM.", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), this, IDC_STATIC);
+    m_settingsStubHint.ShowWindow(SW_HIDE);
+    m_settingsClose.Create(L"Close", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(0, 0, 0, 0), this, IDC_BTN_CLOSE_SETTINGS);
+    m_settingsClose.ShowWindow(SW_HIDE);
 
     // Set initial window size and position
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
@@ -276,11 +311,17 @@ void CMainDlg::LayoutControls()
     const int sendWidth = 70;
     const int attachWidth = 70;
     const int buttonsWidth = sendWidth + margin + attachWidth;
+    const int settingsSize = 34;
+    const int settingsSpacing = 12;
     
     // Input area - bottom left, leaving room for buttons on the right
     int inputTop = clientRect.bottom - inputHeight - margin;
     int inputRight = clientRect.right - buttonsWidth - margin * 2;
-    CRect inputRect(margin, inputTop, inputRight, clientRect.bottom - margin);
+    CRect btnSettingsRect(margin, inputTop + (inputHeight - settingsSize) / 2, margin + settingsSize, inputTop + (inputHeight - settingsSize) / 2 + settingsSize);
+    m_btnSettings.MoveWindow(&btnSettingsRect);
+
+    int inputLeft = margin + settingsSize + settingsSpacing;
+    CRect inputRect(inputLeft, inputTop, inputRight, clientRect.bottom - margin);
     m_input.MoveWindow(&inputRect);
 
     // Send button - next to input
@@ -297,6 +338,8 @@ void CMainDlg::LayoutControls()
     // Attachment list - under attach button
     CRect attachListRect(attachLeft, inputTop + attachHeight + 5, attachLeft + attachWidth, clientRect.bottom - margin);
     m_attachmentList.MoveWindow(&attachListRect);
+
+    LayoutSettingsOverlay();
 }
 
 // Minimize window
@@ -501,6 +544,9 @@ void CMainDlg::UpdateButtonState(int buttonID, Theme::ButtonState newState)
     case IDC_BTN_ATTACH:
         pState = &m_btnAttachState;
         break;
+    case IDC_BTN_SETTINGS:
+        pState = &m_btnSettingsState;
+        break;
     }
     
     if (pState && *pState != newState) {
@@ -556,6 +602,9 @@ void CMainDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
     case IDC_BTN_ATTACH:
         state = m_btnAttachState;
         break;
+    case IDC_BTN_SETTINGS:
+        state = m_btnSettingsState;
+        break;
     }
     
     // Check if button is pressed
@@ -584,7 +633,7 @@ void CMainDlg::OnMouseMove(UINT nFlags, CPoint point)
     }
     
     // Check each button for hover state
-    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH };
+    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH, IDC_BTN_SETTINGS };
     
     for (int buttonID : buttons) {
         CRect buttonRect = GetButtonRect(buttonID);
@@ -610,6 +659,7 @@ void CMainDlg::OnMouseLeave()
     UpdateButtonState(IDC_BTN_CLOSE, Theme::ButtonState::Normal);
     UpdateButtonState(IDC_BTN_SEND, Theme::ButtonState::Normal);
     UpdateButtonState(IDC_BTN_ATTACH, Theme::ButtonState::Normal);
+    UpdateButtonState(IDC_BTN_SETTINGS, Theme::ButtonState::Normal);
     
     CDialogEx::OnMouseLeave();
 }
@@ -626,6 +676,17 @@ BOOL CMainDlg::OnEraseBkgnd(CDC* pDC)
 // Control color handler for dark theme
 HBRUSH CMainDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
+    if (pWnd == &m_settingsOverlay) {
+        static CBrush overlayBrush(RGB(8, 8, 12));
+        pDC->SetBkColor(RGB(8, 8, 12));
+        return overlayBrush;
+    }
+    if (pWnd == &m_settingsPanel) {
+        static CBrush panelBrush(Theme::ChatBackground);
+        pDC->SetBkColor(Theme::ChatBackground);
+        return panelBrush;
+    }
+
     // Set text and background colors for all controls
     pDC->SetTextColor(Theme::Foreground);
     pDC->SetBkColor(Theme::FrameBackground);
@@ -679,7 +740,7 @@ BOOL CMainDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
     int ctrlID = pWnd->GetDlgCtrlID();
     
     // List of buttons we track hover for
-    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH };
+    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH, IDC_BTN_SETTINGS };
     
     // Reset all button states first
     for (int buttonID : buttons) {
@@ -697,4 +758,123 @@ BOOL CMainDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
     }
     
     return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
+}
+
+void CMainDlg::LayoutSettingsOverlay()
+{
+    if (!m_settingsPanel.GetSafeHwnd()) return;
+
+    CRect clientRect;
+    GetClientRect(&clientRect);
+    m_settingsOverlayRect = clientRect;
+    m_settingsOverlay.MoveWindow(&clientRect);
+
+    int panelWidth = std::min(440, clientRect.Width() - 80);
+    int panelHeight = std::min(260, clientRect.Height() - 120);
+    int left = clientRect.left + (clientRect.Width() - panelWidth) / 2;
+    int top = clientRect.top + (clientRect.Height() - panelHeight) / 2;
+    CRect panelRect(left, top, left + panelWidth, top + panelHeight);
+    m_settingsPanel.MoveWindow(&panelRect);
+
+    CRect innerRect = panelRect;
+    innerRect.DeflateRect(20, 18, 20, 18);
+
+    CRect titleRect(innerRect.left, innerRect.top, innerRect.right, innerRect.top + 26);
+    m_settingsTitle.MoveWindow(titleRect);
+
+    CRect apiLabel(innerRect.left, titleRect.bottom + 12, innerRect.right, titleRect.bottom + 32);
+    m_settingsApiKeyLabel.MoveWindow(apiLabel);
+
+    CRect apiEdit(innerRect.left, apiLabel.bottom + 4, innerRect.right, apiLabel.bottom + 34);
+    m_settingsApiKey.MoveWindow(apiEdit);
+
+    CRect stubRect(innerRect.left, apiEdit.bottom + 18, innerRect.right, apiEdit.bottom + 38);
+    m_settingsStubToggle.MoveWindow(stubRect);
+
+    CRect hintRect(innerRect.left, stubRect.bottom + 6, innerRect.right - 10, stubRect.bottom + 40);
+    m_settingsStubHint.MoveWindow(hintRect);
+
+    CRect closeRect(innerRect.right - 90, innerRect.bottom - 32, innerRect.right, innerRect.bottom);
+    m_settingsClose.MoveWindow(closeRect);
+}
+
+void CMainDlg::ShowSettingsOverlay(bool show)
+{
+    int cmd = show ? SW_SHOW : SW_HIDE;
+    m_settingsOverlay.ShowWindow(cmd);
+    m_settingsPanel.ShowWindow(cmd);
+    m_settingsTitle.ShowWindow(cmd);
+    m_settingsApiKeyLabel.ShowWindow(cmd);
+    m_settingsApiKey.ShowWindow(cmd);
+    m_settingsStubToggle.ShowWindow(cmd);
+    m_settingsStubHint.ShowWindow(cmd);
+    m_settingsClose.ShowWindow(cmd);
+
+    m_settingsVisible = show;
+
+    if (show) {
+        LayoutSettingsOverlay();
+        ApplySettingsState();
+        m_settingsOverlay.BringWindowToTop();
+        m_settingsPanel.BringWindowToTop();
+    } else {
+        SaveSettingsFromUI();
+    }
+}
+
+void CMainDlg::ApplySettingsState()
+{
+    const auto& settings = SettingsStore::Get();
+    m_settingsApiKey.SetWindowText(settings.apiKey.c_str());
+    m_settingsStubToggle.SetCheck(settings.stubModeEnabled ? BST_CHECKED : BST_UNCHECKED);
+}
+
+void CMainDlg::SaveSettingsFromUI()
+{
+    CString apiKey;
+    m_settingsApiKey.GetWindowText(apiKey);
+    SettingsStore::SetApiKey(apiKey.GetString());
+    SettingsStore::SetStubModeEnabled(m_settingsStubToggle.GetCheck() == BST_CHECKED);
+    SettingsStore::Save();
+}
+
+void CMainDlg::PopulateSampleHistory()
+{
+    if (!SettingsStore::IsStubModeEnabled()) return;
+
+    m_chatEngine->ClearHistory();
+    ChatHistory& history = m_chatEngine->GetHistory();
+
+    ChatMessage userSample(ChatMessage::Role::User, L"Show me a sample PilotLight conversation.");
+    ChatMessage assistantSample(ChatMessage::Role::Assistant,
+        L"PilotLight stub mode is active. This canned response proves the UI works without an API call.");
+
+    history.AddMessage(userSample);
+    history.AddMessage(assistantSample);
+
+    UpdateChatDisplay();
+}
+
+void CMainDlg::OnSettingsButton()
+{
+    ShowSettingsOverlay(true);
+}
+
+void CMainDlg::OnSettingsClose()
+{
+    ShowSettingsOverlay(false);
+}
+
+void CMainDlg::OnStubToggle()
+{
+    bool enabled = (m_settingsStubToggle.GetCheck() == BST_CHECKED);
+    SettingsStore::SetStubModeEnabled(enabled);
+    SettingsStore::Save();
+
+    if (enabled) {
+        PopulateSampleHistory();
+    } else {
+        LoadChatHistory();
+        UpdateChatDisplay();
+    }
 }
