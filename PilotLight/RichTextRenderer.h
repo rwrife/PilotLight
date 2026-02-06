@@ -14,6 +14,10 @@ public:
     // Append formatted text to RichEdit control
     static void AppendFormattedText(CRichEditCtrl& ctrl, const std::wstring& text, COLORREF color);
     
+    // Append a bubble-style text block
+    static void AppendBubble(CRichEditCtrl& ctrl, const std::wstring& text, COLORREF textColor,
+                             COLORREF backgroundColor, int indent = 18);
+    
     // Scroll to bottom
     static void ScrollToBottom(CRichEditCtrl& ctrl);
     
