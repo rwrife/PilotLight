@@ -1,5 +1,6 @@
 #include "OpenAIClient.h"
 #include "JsonBuilder.h"
+#include "SettingsStore.h"
 #include <windows.h>
 #include <winhttp.h>
 #include <sstream>
@@ -13,6 +14,11 @@ std::wstring OpenAIClient::Endpoint()
 
 std::wstring OpenAIClient::ApiKey()
 {
+    const auto& settings = SettingsStore::Get();
+    if (!settings.apiKey.empty()) {
+        return settings.apiKey;
+    }
+
     wchar_t buffer[512] = {0};
     GetEnvironmentVariableW(L"PILOTLIGHT_OPENAI_API_KEY", buffer, 512);
     return buffer;
@@ -177,6 +183,18 @@ std::wstring OpenAIClient::ParseResponse(const std::wstring& jsonResponse)
 
 std::wstring OpenAIClient::Complete(const std::vector<ChatMessage>& messages)
 {
+    if (SettingsStore::IsStubModeEnabled()) {
+        std::wstring stubResponse = L"(Stub) Running in sample mode, so no OpenAI request was issued. ";
+        if (!messages.empty()) {
+            stubResponse += L"You asked: \"";
+            stubResponse += messages.back().content;
+            stubResponse += L"\". ";
+        }
+        stubResponse += L"Configure PILOTLIGHT_OPENAI_API_KEY in Settings to talk to the API.\n";
+        stubResponse += L"Stub responses are deterministic and fast for local testing.";
+        return stubResponse;
+    }
+
     std::wstring jsonBody = SerializeMessages(messages);
     std::wstring jsonResponse = SendHttpRequest(jsonBody);
     
