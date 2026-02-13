@@ -1,5 +1,6 @@
 #include "RichTextRenderer.h"
 #include <sstream>
+#include <richedit.h>
 
 std::wstring RichTextRenderer::EscapeRTF(const std::wstring& str)
 {
@@ -121,6 +122,40 @@ void RichTextRenderer::AppendFormattedText(CRichEditCtrl& ctrl, const std::wstri
     ctrl.SetSelectionCharFormat(cf);
     
     // Deselect
+    ctrl.SetSel(endPos, endPos);
+}
+
+void RichTextRenderer::AppendBubble(CRichEditCtrl& ctrl, const std::wstring& text, COLORREF textColor,
+                                   COLORREF backgroundColor, int indent)
+{
+    int startPos = ctrl.GetTextLength();
+    ctrl.SetSel(startPos, startPos);
+
+    std::wstring bubbleText = text + L"\r\n";
+    ctrl.ReplaceSel(bubbleText.c_str());
+
+    int endPos = ctrl.GetTextLength();
+    ctrl.SetSel(startPos, endPos);
+
+    CHARFORMAT2 cf;
+    ZeroMemory(&cf, sizeof(cf));
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = CFM_COLOR | CFM_BACKCOLOR;
+    cf.crTextColor = textColor;
+    cf.crBackColor = backgroundColor;
+    ctrl.SetSelectionCharFormat(cf);
+
+    PARAFORMAT2 pf;
+    ZeroMemory(&pf, sizeof(pf));
+    pf.cbSize = sizeof(pf);
+    pf.dwMask = PFM_STARTINDENT | PFM_SPACEAFTER | PFM_SPACEBEFORE | PFM_OFFSET;
+    int twipsIndent = indent * 15;
+    pf.dxStartIndent = twipsIndent;
+    pf.dxOffset = twipsIndent / 2;
+    pf.dySpaceAfter = 60;
+    pf.dySpaceBefore = 24;
+    ctrl.SetParaFormat(pf);
+
     ctrl.SetSel(endPos, endPos);
 }
 
