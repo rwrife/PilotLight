@@ -51,6 +51,7 @@ protected:
     afx_msg void OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp);
     afx_msg BOOL OnNcActivate(BOOL bActive);
     afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+    afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 
     DECLARE_MESSAGE_MAP()
 
