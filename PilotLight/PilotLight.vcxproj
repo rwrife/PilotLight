@@ -188,6 +188,7 @@
     <ClCompile Include="FileUtils.cpp" />
     <ClCompile Include="RichTextRenderer.cpp" />
     <ClCompile Include="ThemedRichEdit.cpp" />
+    <ClCompile Include="PluginHost.cpp" />
   </ItemGroup>
   <!-- Headers -->
   <ItemGroup>
@@ -203,6 +204,7 @@
     <ClInclude Include="FileUtils.h" />
     <ClInclude Include="RichTextRenderer.h" />
     <ClInclude Include="ThemedRichEdit.h" />
+    <ClInclude Include="PluginHost.h" />
   </ItemGroup>
   <!-- Resources -->
   <ItemGroup>
