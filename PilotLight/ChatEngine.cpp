@@ -22,7 +22,9 @@ void ChatEngine::InitializeSystemMessage()
 
 void ChatEngine::AddUserMessage(const std::wstring& content, const std::vector<FileAttachment>& attachments)
 {
-    ChatMessage msg(ChatMessage::Role::User, content);
+    const std::wstring transformedContent = m_pluginHost.ApplyUserMessageTransforms(content);
+
+    ChatMessage msg(ChatMessage::Role::User, transformedContent);
     msg.attachments = attachments;
     m_history.AddMessage(msg);
 }

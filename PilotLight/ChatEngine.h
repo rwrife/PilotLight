@@ -2,6 +2,7 @@
 #include <string>
 #include "ChatMessage.h"
 #include "ChatHistory.h"
+#include "PluginHost.h"
 
 class ChatEngine {
 public:
@@ -15,5 +16,6 @@ public:
 
 private:
     ChatHistory m_history;
+    PluginHost m_pluginHost;
     void InitializeSystemMessage();
 };

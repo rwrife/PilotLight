@@ -35,3 +35,12 @@ PilotLight is designed to be compatible with the OpenAI Chat Completions API and
   - Azure OpenAI
   - Local gateways
   - Self-hosted proxies
+
+## Plugins (minimal plumbing)
+
+PilotLight includes optional, lightweight plugin discovery for narrow extension hooks.
+
+- Discovery path: `<PilotLight.exe dir>\\plugins\\*.dll`
+- Current hook: user prompt transform (`PilotLight_TransformUserPrompt`)
+
+See `docs/plugins.md` and `plugins/SamplePromptPrefixPlugin.cpp` for details.
