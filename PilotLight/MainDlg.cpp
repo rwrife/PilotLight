@@ -769,8 +769,8 @@ void CMainDlg::LayoutSettingsOverlay()
     m_settingsOverlayRect = clientRect;
     m_settingsOverlay.MoveWindow(&clientRect);
 
-    int panelWidth = std::min(440, clientRect.Width() - 80);
-    int panelHeight = std::min(260, clientRect.Height() - 120);
+    int panelWidth = (std::min)(440, clientRect.Width() - 80);
+    int panelHeight = (std::min)(260, clientRect.Height() - 120);
     int left = clientRect.left + (clientRect.Width() - panelWidth) / 2;
     int top = clientRect.top + (clientRect.Height() - panelHeight) / 2;
     CRect panelRect(left, top, left + panelWidth, top + panelHeight);
