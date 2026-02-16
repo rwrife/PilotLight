@@ -9,6 +9,7 @@
 #include "resource.h"
 #include "ChatMessage.h"
 #include "Theme.h"
+#include "SettingsStore.h"
 #include "ThemedRichEdit.h"
 #include <vector>
 
@@ -38,6 +39,9 @@ protected:
     afx_msg void OnClose();
     afx_msg void OnSendMessage();
     afx_msg void OnAttachFile();
+    afx_msg void OnSettingsButton();
+    afx_msg void OnSettingsClose();
+    afx_msg void OnStubToggle();
     afx_msg void OnClearHistory();
     afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
     afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -61,8 +65,20 @@ private:
     CEdit m_input;
     CButton m_btnSend;
     CButton m_btnAttach;
+    CButton m_btnSettings;
     CListBox m_attachmentList;
     CToolTipCtrl m_tooltip;
+
+    CStatic m_settingsOverlay;
+    CStatic m_settingsPanel;
+    CStatic m_settingsTitle;
+    CStatic m_settingsApiKeyLabel;
+    CEdit m_settingsApiKey;
+    CButton m_settingsStubToggle;
+    CStatic m_settingsStubHint;
+    CButton m_settingsClose;
+    bool m_settingsVisible;
+    CRect m_settingsOverlayRect;
 
     // Chat engine
     ChatEngine* m_chatEngine;
@@ -76,6 +92,7 @@ private:
     Theme::ButtonState m_btnCloseState;
     Theme::ButtonState m_btnSendState;
     Theme::ButtonState m_btnAttachState;
+    Theme::ButtonState m_btnSettingsState;
     BOOL m_bTrackingMouse;
     CBrush m_bgBrush;
 
@@ -85,6 +102,11 @@ private:
     void UpdateChatDisplay();
     void SaveChatHistory();
     void LoadChatHistory();
+    void LayoutSettingsOverlay();
+    void ShowSettingsOverlay(bool show);
+    void ApplySettingsState();
+    void SaveSettingsFromUI();
+    void PopulateSampleHistory();
     
     // Button helper methods
     CRect GetButtonRect(int buttonID);

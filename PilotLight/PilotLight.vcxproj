@@ -186,6 +186,7 @@
     <ClCompile Include="ChatHistory.cpp" />
     <ClCompile Include="JsonBuilder.cpp" />
     <ClCompile Include="FileUtils.cpp" />
+    <ClCompile Include="SettingsStore.cpp" />
     <ClCompile Include="RichTextRenderer.cpp" />
     <ClCompile Include="ThemedRichEdit.cpp" />
     <ClCompile Include="PluginHost.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="ChatHistory.h" />
     <ClInclude Include="JsonBuilder.h" />
     <ClInclude Include="FileUtils.h" />
+    <ClInclude Include="SettingsStore.h" />
     <ClInclude Include="RichTextRenderer.h" />
     <ClInclude Include="ThemedRichEdit.h" />
     <ClInclude Include="PluginHost.h" />
