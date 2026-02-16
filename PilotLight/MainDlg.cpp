@@ -925,6 +925,8 @@ void CMainDlg::OnStubToggle()
     } else {
         LoadChatHistory();
         UpdateChatDisplay();
+    }
+}
 
 void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
