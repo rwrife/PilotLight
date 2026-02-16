@@ -1,6 +1,7 @@
 #pragma once
 
 #include <afxwin.h>
+#include <afxdialogex.h>
 #include <map>
 #include <string>
 
