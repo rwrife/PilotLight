@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ToolConfirmationDialog.h"
 #include "resource.h"
 
