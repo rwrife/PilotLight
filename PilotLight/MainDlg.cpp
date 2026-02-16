@@ -64,6 +64,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_WM_CTLCOLOR()
     ON_WM_ERASEBKGND()
     ON_WM_SETCURSOR()
+    ON_WM_CONTEXTMENU()
     ON_BN_CLICKED(IDC_BTN_MINIMIZE, &CMainDlg::OnMinimize)
     ON_BN_CLICKED(IDC_BTN_MAXIMIZE, &CMainDlg::OnMaximize)
     ON_BN_CLICKED(IDC_BTN_CLOSE, &CMainDlg::OnClose)
@@ -188,12 +189,60 @@ BOOL CMainDlg::OnInitDialog()
     return TRUE;
 }
 
-// Pre-translate message for tooltips
+namespace {
+    constexpr UINT ID_INPUT_UNDO = 0x5001;
+    constexpr UINT ID_INPUT_CUT = 0x5002;
+    constexpr UINT ID_INPUT_COPY = 0x5003;
+    constexpr UINT ID_INPUT_PASTE = 0x5004;
+    constexpr UINT ID_INPUT_DELETE = 0x5005;
+    constexpr UINT ID_INPUT_SELECT_ALL = 0x5006;
+}
+
+// Pre-translate message for tooltips + clipboard shortcuts in chat input
 BOOL CMainDlg::PreTranslateMessage(MSG* pMsg)
 {
     if (m_tooltip.GetSafeHwnd()) {
         m_tooltip.RelayEvent(pMsg);
     }
+
+    if (pMsg->message == WM_KEYDOWN && GetFocus() == &m_input) {
+        const bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+        const bool shiftDown = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+
+        if (ctrlDown) {
+            switch (pMsg->wParam) {
+            case 'A':
+                m_input.SetSel(0, -1);
+                return TRUE;
+            case 'C':
+                m_input.Copy();
+                return TRUE;
+            case 'V':
+                m_input.Paste();
+                return TRUE;
+            case 'X':
+                m_input.Cut();
+                return TRUE;
+            case 'Z':
+                m_input.Undo();
+                return TRUE;
+            case VK_INSERT:
+                m_input.Copy();
+                return TRUE;
+            }
+        }
+
+        if (shiftDown && pMsg->wParam == VK_INSERT) {
+            m_input.Paste();
+            return TRUE;
+        }
+
+        if (shiftDown && pMsg->wParam == VK_DELETE) {
+            m_input.Cut();
+            return TRUE;
+        }
+    }
+
     return CDialogEx::PreTranslateMessage(pMsg);
 }
 
@@ -876,5 +925,83 @@ void CMainDlg::OnStubToggle()
     } else {
         LoadChatHistory();
         UpdateChatDisplay();
+    }
+}
+
+void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+    if (!m_input.GetSafeHwnd()) {
+        CDialogEx::OnContextMenu(pWnd, point);
+        return;
+    }
+
+    CWnd* pFocus = GetFocus();
+    const bool inputFocused = (pFocus == &m_input);
+    const bool inputTargeted = (pWnd == &m_input);
+    if (!inputFocused && !inputTargeted) {
+        CDialogEx::OnContextMenu(pWnd, point);
+        return;
+    }
+
+    if (point.x == -1 && point.y == -1) {
+        CRect rect;
+        m_input.GetWindowRect(&rect);
+        point = CPoint(rect.left + 16, rect.top + 16);
+    }
+
+    int selStart = 0;
+    int selEnd = 0;
+    m_input.GetSel(selStart, selEnd);
+    const bool hasSelection = selEnd > selStart;
+
+    CMenu menu;
+    if (!menu.CreatePopupMenu()) {
+        return;
+    }
+
+    menu.AppendMenu(MF_STRING, ID_INPUT_UNDO, L"Undo");
+    menu.AppendMenu(MF_SEPARATOR);
+    menu.AppendMenu(MF_STRING, ID_INPUT_CUT, L"Cut");
+    menu.AppendMenu(MF_STRING, ID_INPUT_COPY, L"Copy");
+    menu.AppendMenu(MF_STRING, ID_INPUT_PASTE, L"Paste");
+    menu.AppendMenu(MF_STRING, ID_INPUT_DELETE, L"Delete");
+    menu.AppendMenu(MF_SEPARATOR);
+    menu.AppendMenu(MF_STRING, ID_INPUT_SELECT_ALL, L"Select All");
+
+    if (!m_input.CanUndo()) {
+        menu.EnableMenuItem(ID_INPUT_UNDO, MF_BYCOMMAND | MF_GRAYED);
+    }
+    if (!hasSelection) {
+        menu.EnableMenuItem(ID_INPUT_CUT, MF_BYCOMMAND | MF_GRAYED);
+        menu.EnableMenuItem(ID_INPUT_COPY, MF_BYCOMMAND | MF_GRAYED);
+        menu.EnableMenuItem(ID_INPUT_DELETE, MF_BYCOMMAND | MF_GRAYED);
+    }
+    if (!::IsClipboardFormatAvailable(CF_UNICODETEXT) && !::IsClipboardFormatAvailable(CF_TEXT)) {
+        menu.EnableMenuItem(ID_INPUT_PASTE, MF_BYCOMMAND | MF_GRAYED);
+    }
+
+    UINT selected = menu.TrackPopupMenu(TPM_RETURNCMD | TPM_RIGHTBUTTON, point.x, point.y, this);
+    switch (selected) {
+    case ID_INPUT_UNDO:
+        m_input.Undo();
+        break;
+    case ID_INPUT_CUT:
+        m_input.Cut();
+        break;
+    case ID_INPUT_COPY:
+        m_input.Copy();
+        break;
+    case ID_INPUT_PASTE:
+        m_input.Paste();
+        break;
+    case ID_INPUT_DELETE:
+        m_input.ReplaceSel(L"");
+        break;
+    case ID_INPUT_SELECT_ALL:
+        m_input.SetSel(0, -1);
+        break;
+    default:
+        break;
+
     }
 }
