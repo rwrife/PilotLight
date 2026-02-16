@@ -44,3 +44,9 @@ PilotLight includes optional, lightweight plugin discovery for narrow extension 
 - Current hook: user prompt transform (`PilotLight_TransformUserPrompt`)
 
 See `docs/plugins.md` and `plugins/SamplePromptPrefixPlugin.cpp` for details.
+
+## Agentic safety foundation
+
+A lightweight tool confirmation dialog + in-memory permission helper is included for future tool execution flows.
+
+See `docs/tool-confirmation.md` for usage and decision model.
