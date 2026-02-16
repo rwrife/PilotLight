@@ -74,6 +74,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BTN_CLOSE_SETTINGS, &CMainDlg::OnSettingsClose)
     ON_BN_CLICKED(IDC_SETTINGS_STUB_TOGGLE, &CMainDlg::OnStubToggle)
     ON_BN_CLICKED(IDC_BTN_CLEAR_HISTORY, &CMainDlg::OnClearHistory)
+    ON_LBN_DBLCLK(IDC_ATTACHMENT_LIST, &CMainDlg::OnAttachmentDblClick)
     ON_WM_NCCALCSIZE()
     ON_WM_NCACTIVATE()
 END_MESSAGE_MAP()
@@ -132,6 +133,7 @@ BOOL CMainDlg::OnInitDialog()
     m_tooltip.AddTool(&m_btnClose, L"Close");
     m_tooltip.AddTool(&m_btnSend, L"Send Message");
     m_tooltip.AddTool(&m_btnAttach, L"Attach Files");
+    m_tooltip.AddTool(&m_attachmentList, L"No pending files");
 
     // Settings button & overlay
     if (!m_btnSettings.GetSafeHwnd()) {
@@ -241,6 +243,15 @@ BOOL CMainDlg::PreTranslateMessage(MSG* pMsg)
             m_input.Cut();
             return TRUE;
         }
+    }
+
+    // Allow quick removal of pending attachments using Delete/Backspace
+    if (pMsg->message == WM_KEYDOWN && m_attachmentList.GetSafeHwnd() &&
+        ::GetFocus() == m_attachmentList.GetSafeHwnd() &&
+        (pMsg->wParam == VK_DELETE || pMsg->wParam == VK_BACK)) {
+        const int selectedIndex = m_attachmentList.GetCurSel();
+        RemoveAttachmentAtIndex(selectedIndex);
+        return TRUE;
     }
 
     return CDialogEx::PreTranslateMessage(pMsg);
@@ -434,6 +445,7 @@ void CMainDlg::OnSendMessage()
     m_input.SetWindowText(L"");
     m_pendingAttachments.clear();
     m_attachmentList.ResetContent();
+    m_tooltip.UpdateTipText(L"No pending files", &m_attachmentList);
 
     // Get assistant response
     ChatMessage assistantMsg = m_chatEngine->GetAssistantResponse();
@@ -486,6 +498,34 @@ void CMainDlg::OnAttachFile()
         m_pendingAttachments.push_back(attachment);
         m_attachmentList.AddString(attachment.filename.c_str());
     }
+
+    if (!m_pendingAttachments.empty()) {
+        m_tooltip.UpdateTipText(L"Double-click or press Delete to remove", &m_attachmentList);
+    }
+}
+
+void CMainDlg::OnAttachmentDblClick()
+{
+    const int selectedIndex = m_attachmentList.GetCurSel();
+    RemoveAttachmentAtIndex(selectedIndex);
+}
+
+void CMainDlg::RemoveAttachmentAtIndex(int index)
+{
+    if (index == LB_ERR || index < 0 || index >= static_cast<int>(m_pendingAttachments.size())) {
+        return;
+    }
+
+    m_pendingAttachments.erase(m_pendingAttachments.begin() + index);
+    m_attachmentList.DeleteString(index);
+
+    if (m_pendingAttachments.empty()) {
+        m_tooltip.UpdateTipText(L"No pending files", &m_attachmentList);
+        return;
+    }
+
+    const int nextSelection = min(index, static_cast<int>(m_pendingAttachments.size()) - 1);
+    m_attachmentList.SetCurSel(nextSelection);
 }
 
 // Clear history
