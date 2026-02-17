@@ -148,19 +148,19 @@ BOOL CMainDlg::OnInitDialog()
     m_settingsOverlay.ShowWindow(SW_HIDE);
     m_settingsPanel.Create(L"", WS_CHILD | WS_VISIBLE | WS_BORDER, CRect(0, 0, 0, 0), this, 0);
     m_settingsPanel.ShowWindow(SW_HIDE);
-    m_settingsTitle.Create(L"Settings & Sample Data", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), this, 0);
+    m_settingsTitle.Create(L"Settings & Sample Data", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), &m_settingsPanel, 0);
     m_settingsTitle.SetFont(CFont::FromHandle(Theme::TitleFont()));
     m_settingsTitle.ShowWindow(SW_HIDE);
-    m_settingsApiKeyLabel.Create(L"OpenAI API Key", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), this, IDC_STATIC);
+    m_settingsApiKeyLabel.Create(L"OpenAI API Key", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_STATIC);
     m_settingsApiKeyLabel.ShowWindow(SW_HIDE);
-    m_settingsApiKey.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, IDC_SETTINGS_APIKEY);
+    m_settingsApiKey.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_SETTINGS_APIKEY);
     m_settingsApiKey.ShowWindow(SW_HIDE);
     m_settingsApiKey.LimitText(256);
-    m_settingsStubToggle.Create(L"Enable stub/sample-data mode", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, CRect(0, 0, 0, 0), this, IDC_SETTINGS_STUB_TOGGLE);
+    m_settingsStubToggle.Create(L"Enable stub/sample-data mode", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_SETTINGS_STUB_TOGGLE);
     m_settingsStubToggle.ShowWindow(SW_HIDE);
-    m_settingsStubHint.Create(L"Stub responses help exercise the UI without calling a real LLM.", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), this, IDC_STATIC);
+    m_settingsStubHint.Create(L"Stub responses help exercise the UI without calling a real LLM.", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_STATIC);
     m_settingsStubHint.ShowWindow(SW_HIDE);
-    m_settingsClose.Create(L"Close", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(0, 0, 0, 0), this, IDC_BTN_CLOSE_SETTINGS);
+    m_settingsClose.Create(L"Close", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_BTN_CLOSE_SETTINGS);
     m_settingsClose.ShowWindow(SW_HIDE);
 
     // Set initial window size and position
@@ -865,7 +865,7 @@ void CMainDlg::LayoutSettingsOverlay()
     CRect panelRect(left, top, left + panelWidth, top + panelHeight);
     m_settingsPanel.MoveWindow(&panelRect);
 
-    CRect innerRect = panelRect;
+    CRect innerRect(0, 0, panelWidth, panelHeight);
     innerRect.DeflateRect(20, 18, 20, 18);
 
     CRect titleRect(innerRect.left, innerRect.top, innerRect.right, innerRect.top + 26);
@@ -906,6 +906,7 @@ void CMainDlg::ShowSettingsOverlay(bool show)
         ApplySettingsState();
         m_settingsOverlay.BringWindowToTop();
         m_settingsPanel.BringWindowToTop();
+        m_settingsApiKey.SetFocus();
     } else {
         SaveSettingsFromUI();
     }
