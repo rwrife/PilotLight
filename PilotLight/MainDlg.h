@@ -43,6 +43,7 @@ protected:
     afx_msg void OnSettingsClose();
     afx_msg void OnStubToggle();
     afx_msg void OnClearHistory();
+    afx_msg void OnAttachmentDblClick();
     afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
     afx_msg void OnMouseMove(UINT nFlags, CPoint point);
     afx_msg void OnMouseLeave();
@@ -108,6 +109,7 @@ private:
     void ApplySettingsState();
     void SaveSettingsFromUI();
     void PopulateSampleHistory();
+    void RemoveAttachmentAtIndex(int index);
     
     // Button helper methods
     CRect GetButtonRect(int buttonID);
