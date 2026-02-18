@@ -39,6 +39,7 @@ protected:
     afx_msg void OnClose();
     afx_msg void OnSendMessage();
     afx_msg void OnAttachFile();
+    afx_msg void OnCopyLastResponse();
     afx_msg void OnSettingsButton();
     afx_msg void OnSettingsClose();
     afx_msg void OnStubToggle();
@@ -67,6 +68,7 @@ private:
     CEdit m_input;
     CButton m_btnSend;
     CButton m_btnAttach;
+    CButton m_btnCopyLastResponse;
     CButton m_btnSettings;
     CListBox m_attachmentList;
     CToolTipCtrl m_tooltip;
@@ -94,6 +96,7 @@ private:
     Theme::ButtonState m_btnCloseState;
     Theme::ButtonState m_btnSendState;
     Theme::ButtonState m_btnAttachState;
+    Theme::ButtonState m_btnCopyState;
     Theme::ButtonState m_btnSettingsState;
     BOOL m_bTrackingMouse;
     CBrush m_bgBrush;
@@ -110,6 +113,7 @@ private:
     void SaveSettingsFromUI();
     void PopulateSampleHistory();
     void RemoveAttachmentAtIndex(int index);
+    std::wstring FindLatestAssistantMessage() const;
     
     // Button helper methods
     CRect GetButtonRect(int buttonID);
