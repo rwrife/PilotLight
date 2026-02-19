@@ -41,6 +41,26 @@ std::wstring PluginHost::ApplyUserMessageTransforms(const std::wstring& message)
     return current;
 }
 
+
+std::wstring PluginHost::ApplyAssistantResponseTransforms(const std::wstring& response) const
+{
+    std::wstring current = response;
+
+    for (const auto& plugin : m_plugins) {
+        if (!plugin.transformAssistantResponse) {
+            continue;
+        }
+
+        wchar_t buffer[kMaxPluginOutputChars] = { 0 };
+        const BOOL handled = plugin.transformAssistantResponse(current.c_str(), buffer, kMaxPluginOutputChars);
+        if (handled && buffer[0] != L'\0') {
+            current = buffer;
+        }
+    }
+
+    return current;
+}
+
 void PluginHost::LoadPlugins()
 {
     const std::wstring pluginPattern = GetExecutableDirectory() + L"\\plugins\\*.dll";
@@ -62,10 +82,12 @@ void PluginHost::LoadPlugins()
             continue;
         }
 
-        auto transformFn = reinterpret_cast<TransformUserPromptFn>(
+        auto transformPromptFn = reinterpret_cast<TransformUserPromptFn>(
             GetProcAddress(module, "PilotLight_TransformUserPrompt"));
+        auto transformAssistantFn = reinterpret_cast<TransformAssistantResponseFn>(
+            GetProcAddress(module, "PilotLight_TransformAssistantResponse"));
 
-        if (!transformFn) {
+        if (!transformPromptFn && !transformAssistantFn) {
             FreeLibrary(module);
             continue;
         }
@@ -73,7 +95,8 @@ void PluginHost::LoadPlugins()
         Plugin plugin = {};
         plugin.module = module;
         plugin.name = findData.cFileName;
-        plugin.transformUserPrompt = transformFn;
+        plugin.transformUserPrompt = transformPromptFn;
+        plugin.transformAssistantResponse = transformAssistantFn;
         m_plugins.push_back(plugin);
 
     } while (FindNextFileW(findHandle, &findData));
