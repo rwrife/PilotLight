@@ -7,6 +7,7 @@
 #include "RichTextRenderer.h"
 #include <commctrl.h>
 #include <algorithm>
+#include <cstring>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -19,6 +20,7 @@ CMainDlg::CMainDlg(CWnd* pParent /*=nullptr*/)
     , m_btnCloseState(Theme::ButtonState::Normal)
     , m_btnSendState(Theme::ButtonState::Normal)
     , m_btnAttachState(Theme::ButtonState::Normal)
+    , m_btnCopyState(Theme::ButtonState::Normal)
     , m_btnSettingsState(Theme::ButtonState::Normal)
     , m_bTrackingMouse(FALSE)
     , m_settingsVisible(false)
@@ -70,6 +72,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_BN_CLICKED(IDC_BTN_CLOSE, &CMainDlg::OnClose)
     ON_BN_CLICKED(IDC_BTN_SEND, &CMainDlg::OnSendMessage)
     ON_BN_CLICKED(IDC_BTN_ATTACH, &CMainDlg::OnAttachFile)
+    ON_BN_CLICKED(IDC_BTN_COPY_LAST_RESPONSE, &CMainDlg::OnCopyLastResponse)
     ON_BN_CLICKED(IDC_BTN_SETTINGS, &CMainDlg::OnSettingsButton)
     ON_BN_CLICKED(IDC_BTN_CLOSE_SETTINGS, &CMainDlg::OnSettingsClose)
     ON_BN_CLICKED(IDC_SETTINGS_STUB_TOGGLE, &CMainDlg::OnStubToggle)
@@ -106,6 +109,10 @@ BOOL CMainDlg::OnInitDialog()
     m_btnClose.ModifyStyle(0, BS_OWNERDRAW);
     m_btnSend.ModifyStyle(0, BS_OWNERDRAW);
     m_btnAttach.ModifyStyle(0, BS_OWNERDRAW);
+    if (!m_btnCopyLastResponse.GetSafeHwnd()) {
+        m_btnCopyLastResponse.Create(L"", WS_CHILD | WS_VISIBLE | BS_OWNERDRAW, CRect(0, 0, 32, 32), this, IDC_BTN_COPY_LAST_RESPONSE);
+    }
+    m_btnCopyLastResponse.ModifyStyle(0, BS_OWNERDRAW);
 
     // Set button text using Unicode escape sequences for reliable matching
     m_btnMinimize.SetWindowText(L"\u2212");  // Minus sign (U+2212)
@@ -113,6 +120,7 @@ BOOL CMainDlg::OnInitDialog()
     m_btnClose.SetWindowText(L"\u00D7");     // Multiplication sign (U+00D7)
     m_btnSend.SetWindowText(L"\u2191");      // Up arrow (U+2191)
     m_btnAttach.SetWindowText(L"\U0001F4CE"); // Paperclip (U+1F4CE)
+    m_btnCopyLastResponse.SetWindowText(L"Copy");
 
     // Set up chat display
     m_chat.ModifyStyleEx(WS_EX_CLIENTEDGE | WS_EX_STATICEDGE, 0);  // Remove 3D border
@@ -133,6 +141,7 @@ BOOL CMainDlg::OnInitDialog()
     m_tooltip.AddTool(&m_btnClose, L"Close");
     m_tooltip.AddTool(&m_btnSend, L"Send Message");
     m_tooltip.AddTool(&m_btnAttach, L"Attach Files");
+    m_tooltip.AddTool(&m_btnCopyLastResponse, L"Copy latest assistant response");
     m_tooltip.AddTool(&m_attachmentList, L"No pending files");
 
     // Settings button & overlay
@@ -370,7 +379,8 @@ void CMainDlg::LayoutControls()
     // Calculate button widths
     const int sendWidth = 70;
     const int attachWidth = 70;
-    const int buttonsWidth = sendWidth + margin + attachWidth;
+    const int copyWidth = 70;
+    const int buttonsWidth = sendWidth + margin + attachWidth + margin + copyWidth;
     const int settingsSize = 34;
     const int settingsSpacing = 12;
     
@@ -398,6 +408,11 @@ void CMainDlg::LayoutControls()
     // Attachment list - under attach button
     CRect attachListRect(attachLeft, inputTop + attachHeight + 5, attachLeft + attachWidth, clientRect.bottom - margin);
     m_attachmentList.MoveWindow(&attachListRect);
+
+    // Copy latest response button
+    int copyLeft = attachLeft + attachWidth + margin;
+    CRect copyRect(copyLeft, inputTop, copyLeft + copyWidth, clientRect.bottom - margin);
+    m_btnCopyLastResponse.MoveWindow(&copyRect);
 
     LayoutSettingsOverlay();
 }
@@ -510,6 +525,40 @@ void CMainDlg::OnAttachmentDblClick()
     RemoveAttachmentAtIndex(selectedIndex);
 }
 
+void CMainDlg::OnCopyLastResponse()
+{
+    const std::wstring latestResponse = FindLatestAssistantMessage();
+    if (latestResponse.empty()) {
+        AfxMessageBox(L"No assistant response available to copy yet.");
+        return;
+    }
+
+    if (!::OpenClipboard(m_hWnd)) {
+        AfxMessageBox(L"Unable to open clipboard.");
+        return;
+    }
+
+    EmptyClipboard();
+    const size_t bytes = (latestResponse.size() + 1) * sizeof(wchar_t);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, bytes);
+    if (!hMem) {
+        CloseClipboard();
+        AfxMessageBox(L"Unable to allocate clipboard memory.");
+        return;
+    }
+
+    void* pMem = GlobalLock(hMem);
+    if (pMem) {
+        memcpy(pMem, latestResponse.c_str(), bytes);
+        GlobalUnlock(hMem);
+        SetClipboardData(CF_UNICODETEXT, hMem);
+    } else {
+        GlobalFree(hMem);
+    }
+
+    CloseClipboard();
+}
+
 void CMainDlg::RemoveAttachmentAtIndex(int index)
 {
     if (index == LB_ERR || index < 0 || index >= static_cast<int>(m_pendingAttachments.size())) {
@@ -541,21 +590,15 @@ void CMainDlg::OnClearHistory()
 // Append chat message to display
 void CMainDlg::AppendChatMessage(const ChatMessage& msg)
 {
-    std::wstring prefix;
-    COLORREF bubbleColor;
-
     if (msg.role == ChatMessage::Role::User) {
-        prefix = L"You: ";
-        bubbleColor = Theme::Accent;
+        RichTextRenderer::AppendBubble(m_chat, L"You: " + msg.content, Theme::Text, Theme::Accent);
     } else if (msg.role == ChatMessage::Role::Assistant) {
-        prefix = L"Assistant: ";
-        bubbleColor = RGB(60, 60, 60);
+        RichTextRenderer::AppendFormattedText(m_chat, L"Assistant:\r\n", Theme::Foreground);
+        RichTextRenderer::AppendFormattedText(m_chat, msg.content + L"\r\n\r\n", Theme::Text);
     } else {
-        prefix = L"System: ";
-        bubbleColor = RGB(100, 100, 100);
+        RichTextRenderer::AppendFormattedText(m_chat, L"System: " + msg.content + L"\r\n\r\n", Theme::Foreground);
     }
 
-    RichTextRenderer::AppendBubble(m_chat, prefix + msg.content, Theme::Text, bubbleColor);
     RichTextRenderer::ScrollToBottom(m_chat);
 }
 
@@ -580,6 +623,22 @@ void CMainDlg::SaveChatHistory()
 
     std::wstring historyPath = appDataPath + L"\\history.json";
     m_chatEngine->GetHistory().SaveToFile(historyPath);
+}
+
+std::wstring CMainDlg::FindLatestAssistantMessage() const
+{
+    if (!m_chatEngine) {
+        return L"";
+    }
+
+    const auto& messages = m_chatEngine->GetHistory().GetMessages();
+    for (auto it = messages.rbegin(); it != messages.rend(); ++it) {
+        if (it->role == ChatMessage::Role::Assistant) {
+            return it->content;
+        }
+    }
+
+    return L"";
 }
 
 // Load chat history
@@ -632,6 +691,9 @@ void CMainDlg::UpdateButtonState(int buttonID, Theme::ButtonState newState)
         break;
     case IDC_BTN_ATTACH:
         pState = &m_btnAttachState;
+        break;
+    case IDC_BTN_COPY_LAST_RESPONSE:
+        pState = &m_btnCopyState;
         break;
     case IDC_BTN_SETTINGS:
         pState = &m_btnSettingsState;
@@ -691,6 +753,9 @@ void CMainDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
     case IDC_BTN_ATTACH:
         state = m_btnAttachState;
         break;
+    case IDC_BTN_COPY_LAST_RESPONSE:
+        state = m_btnCopyState;
+        break;
     case IDC_BTN_SETTINGS:
         state = m_btnSettingsState;
         break;
@@ -722,7 +787,7 @@ void CMainDlg::OnMouseMove(UINT nFlags, CPoint point)
     }
     
     // Check each button for hover state
-    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH, IDC_BTN_SETTINGS };
+    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH, IDC_BTN_COPY_LAST_RESPONSE, IDC_BTN_SETTINGS };
     
     for (int buttonID : buttons) {
         CRect buttonRect = GetButtonRect(buttonID);
@@ -748,6 +813,7 @@ void CMainDlg::OnMouseLeave()
     UpdateButtonState(IDC_BTN_CLOSE, Theme::ButtonState::Normal);
     UpdateButtonState(IDC_BTN_SEND, Theme::ButtonState::Normal);
     UpdateButtonState(IDC_BTN_ATTACH, Theme::ButtonState::Normal);
+    UpdateButtonState(IDC_BTN_COPY_LAST_RESPONSE, Theme::ButtonState::Normal);
     UpdateButtonState(IDC_BTN_SETTINGS, Theme::ButtonState::Normal);
     
     CDialogEx::OnMouseLeave();
@@ -829,7 +895,7 @@ BOOL CMainDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
     int ctrlID = pWnd->GetDlgCtrlID();
     
     // List of buttons we track hover for
-    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH, IDC_BTN_SETTINGS };
+    int buttons[] = { IDC_BTN_MINIMIZE, IDC_BTN_MAXIMIZE, IDC_BTN_CLOSE, IDC_BTN_SEND, IDC_BTN_ATTACH, IDC_BTN_COPY_LAST_RESPONSE, IDC_BTN_SETTINGS };
     
     // Reset all button states first
     for (int buttonID : buttons) {
