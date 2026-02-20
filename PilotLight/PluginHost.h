@@ -10,15 +10,18 @@ public:
     ~PluginHost();
 
     std::wstring ApplyUserMessageTransforms(const std::wstring& message) const;
+    std::wstring ApplyAssistantResponseTransforms(const std::wstring& response) const;
     size_t LoadedPluginCount() const;
 
 private:
     typedef BOOL(WINAPI* TransformUserPromptFn)(LPCWSTR input, LPWSTR output, DWORD outputChars);
+    typedef BOOL(WINAPI* TransformAssistantResponseFn)(LPCWSTR input, LPWSTR output, DWORD outputChars);
 
     struct Plugin {
         HMODULE module;
         std::wstring name;
         TransformUserPromptFn transformUserPrompt;
+        TransformAssistantResponseFn transformAssistantResponse;
     };
 
     std::vector<Plugin> m_plugins;

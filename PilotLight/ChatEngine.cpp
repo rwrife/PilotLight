@@ -33,6 +33,7 @@ ChatMessage ChatEngine::GetAssistantResponse()
 {
     OpenAIClient client;
     std::wstring response = client.Complete(m_history.GetMessages());
+    response = m_pluginHost.ApplyAssistantResponseTransforms(response);
     
     ChatMessage assistantMsg(ChatMessage::Role::Assistant, response);
     m_history.AddMessage(assistantMsg);

@@ -41,7 +41,7 @@ PilotLight is designed to be compatible with the OpenAI Chat Completions API and
 PilotLight includes optional, lightweight plugin discovery for narrow extension hooks.
 
 - Discovery path: `<PilotLight.exe dir>\\plugins\\*.dll`
-- Current hook: user prompt transform (`PilotLight_TransformUserPrompt`)
+- Current hooks: user prompt transform (`PilotLight_TransformUserPrompt`) and assistant response transform (`PilotLight_TransformAssistantResponse`)
 
 See `docs/plugins.md` and `plugins/SamplePromptPrefixPlugin.cpp` for details.
 
