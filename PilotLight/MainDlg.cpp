@@ -216,7 +216,12 @@ BOOL CMainDlg::PreTranslateMessage(MSG* pMsg)
         m_tooltip.RelayEvent(pMsg);
     }
 
-    if (pMsg->message == WM_KEYDOWN && GetFocus() == &m_input) {
+    CWnd* pFocus = GetFocus();
+    const bool inputFocused =
+        pFocus != nullptr &&
+        (pFocus->GetSafeHwnd() == m_input.GetSafeHwnd() || ::IsChild(m_input.GetSafeHwnd(), pFocus->GetSafeHwnd()));
+
+    if (pMsg->message == WM_KEYDOWN && inputFocused) {
         const bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
         const bool shiftDown = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
 
@@ -1043,8 +1048,14 @@ void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point)
     }
 
     CWnd* pFocus = GetFocus();
-    const bool inputFocused = (pFocus == &m_input);
-    const bool inputTargeted = (pWnd == &m_input);
+    const bool inputFocused =
+        pFocus != nullptr &&
+        (pFocus->GetSafeHwnd() == m_input.GetSafeHwnd() || ::IsChild(m_input.GetSafeHwnd(), pFocus->GetSafeHwnd()));
+
+    const bool inputTargeted =
+        pWnd != nullptr &&
+        (pWnd->GetSafeHwnd() == m_input.GetSafeHwnd() || ::IsChild(m_input.GetSafeHwnd(), pWnd->GetSafeHwnd()));
+
     if (!inputFocused && !inputTargeted) {
         CDialogEx::OnContextMenu(pWnd, point);
         return;
