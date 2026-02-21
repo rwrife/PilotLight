@@ -160,6 +160,11 @@ BOOL CMainDlg::OnInitDialog()
     m_settingsTitle.Create(L"Settings & Sample Data", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), &m_settingsPanel, 0);
     m_settingsTitle.SetFont(CFont::FromHandle(Theme::TitleFont()));
     m_settingsTitle.ShowWindow(SW_HIDE);
+    m_settingsEndpointLabel.Create(L"OpenAI Endpoint", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_STATIC);
+    m_settingsEndpointLabel.ShowWindow(SW_HIDE);
+    m_settingsEndpoint.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_SETTINGS_ENDPOINT);
+    m_settingsEndpoint.ShowWindow(SW_HIDE);
+    m_settingsEndpoint.LimitText(256);
     m_settingsApiKeyLabel.Create(L"OpenAI API Key", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_STATIC);
     m_settingsApiKeyLabel.ShowWindow(SW_HIDE);
     m_settingsApiKey.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), &m_settingsPanel, IDC_SETTINGS_APIKEY);
@@ -930,8 +935,8 @@ void CMainDlg::LayoutSettingsOverlay()
     m_settingsOverlayRect = clientRect;
     m_settingsOverlay.MoveWindow(&clientRect);
 
-    int panelWidth = (std::min)(440, clientRect.Width() - 80);
-    int panelHeight = (std::min)(260, clientRect.Height() - 120);
+    int panelWidth = (std::min)(460, clientRect.Width() - 80);
+    int panelHeight = (std::min)(320, clientRect.Height() - 120);
     int left = clientRect.left + (clientRect.Width() - panelWidth) / 2;
     int top = clientRect.top + (clientRect.Height() - panelHeight) / 2;
     CRect panelRect(left, top, left + panelWidth, top + panelHeight);
@@ -943,7 +948,13 @@ void CMainDlg::LayoutSettingsOverlay()
     CRect titleRect(innerRect.left, innerRect.top, innerRect.right, innerRect.top + 26);
     m_settingsTitle.MoveWindow(titleRect);
 
-    CRect apiLabel(innerRect.left, titleRect.bottom + 12, innerRect.right, titleRect.bottom + 32);
+    CRect endpointLabel(innerRect.left, titleRect.bottom + 12, innerRect.right, titleRect.bottom + 32);
+    m_settingsEndpointLabel.MoveWindow(endpointLabel);
+
+    CRect endpointEdit(innerRect.left, endpointLabel.bottom + 4, innerRect.right, endpointLabel.bottom + 34);
+    m_settingsEndpoint.MoveWindow(endpointEdit);
+
+    CRect apiLabel(innerRect.left, endpointEdit.bottom + 12, innerRect.right, endpointEdit.bottom + 32);
     m_settingsApiKeyLabel.MoveWindow(apiLabel);
 
     CRect apiEdit(innerRect.left, apiLabel.bottom + 4, innerRect.right, apiLabel.bottom + 34);
@@ -965,6 +976,8 @@ void CMainDlg::ShowSettingsOverlay(bool show)
     m_settingsOverlay.ShowWindow(cmd);
     m_settingsPanel.ShowWindow(cmd);
     m_settingsTitle.ShowWindow(cmd);
+    m_settingsEndpointLabel.ShowWindow(cmd);
+    m_settingsEndpoint.ShowWindow(cmd);
     m_settingsApiKeyLabel.ShowWindow(cmd);
     m_settingsApiKey.ShowWindow(cmd);
     m_settingsStubToggle.ShowWindow(cmd);
@@ -976,14 +989,14 @@ void CMainDlg::ShowSettingsOverlay(bool show)
     if (show) {
         LayoutSettingsOverlay();
         ApplySettingsState();
-
         // Ensure overlay and panel are above the rich edit/chat controls.
         m_settingsOverlay.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0,
             SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
         m_settingsPanel.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0,
             SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 
-        m_settingsApiKey.SetFocus();
+        // Endpoint is the first field in this settings flow.
+        m_settingsEndpoint.SetFocus();
     } else {
         SaveSettingsFromUI();
         m_input.SetFocus();
@@ -995,15 +1008,23 @@ void CMainDlg::ShowSettingsOverlay(bool show)
 void CMainDlg::ApplySettingsState()
 {
     const auto& settings = SettingsStore::Get();
+    m_settingsEndpoint.SetWindowText(settings.endpoint.c_str());
     m_settingsApiKey.SetWindowText(settings.apiKey.c_str());
     m_settingsStubToggle.SetCheck(settings.stubModeEnabled ? BST_CHECKED : BST_UNCHECKED);
 }
 
 void CMainDlg::SaveSettingsFromUI()
 {
+    CString endpoint;
+    m_settingsEndpoint.GetWindowText(endpoint);
+    endpoint.Trim();
+    SettingsStore::SetEndpoint(endpoint.GetString());
+
     CString apiKey;
     m_settingsApiKey.GetWindowText(apiKey);
+    apiKey.Trim();
     SettingsStore::SetApiKey(apiKey.GetString());
+
     SettingsStore::SetStubModeEnabled(m_settingsStubToggle.GetCheck() == BST_CHECKED);
     SettingsStore::Save();
 }

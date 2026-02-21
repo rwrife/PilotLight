@@ -48,6 +48,12 @@ void SettingsStore::SetApiKey(const std::wstring& apiKey)
     s_settings.apiKey = apiKey;
 }
 
+void SettingsStore::SetEndpoint(const std::wstring& endpoint)
+{
+    EnsureLoaded();
+    s_settings.endpoint = endpoint;
+}
+
 void SettingsStore::SetStubModeEnabled(bool enabled)
 {
     EnsureLoaded();
@@ -77,6 +83,7 @@ void SettingsStore::Save()
     }
 
     file.imbue(std::locale::classic());
+    file << L"endpoint=" << s_settings.endpoint << L"\n";
     file << L"apiKey=" << s_settings.apiKey << L"\n";
     file << L"stubMode=" << (s_settings.stubModeEnabled ? 1 : 0) << L"\n";
 }
@@ -114,7 +121,9 @@ void SettingsStore::EnsureLoaded()
         std::wstring key = TrimWhitespace(line.substr(0, separator));
         std::wstring value = TrimWhitespace(line.substr(separator + 1));
 
-        if (key == L"apiKey") {
+        if (key == L"endpoint") {
+            s_settings.endpoint = value;
+        } else if (key == L"apiKey") {
             s_settings.apiKey = value;
         } else if (key == L"stubMode") {
             s_settings.stubModeEnabled = (value == L"1" || StringEqualsIgnoreCase(value, L"true"));
