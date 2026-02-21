@@ -153,9 +153,9 @@ BOOL CMainDlg::OnInitDialog()
     m_btnSettings.SetFont(CFont::FromHandle(Theme::TitleFont()));
     m_tooltip.AddTool(&m_btnSettings, L"Settings");
 
-    m_settingsOverlay.Create(L"", WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 0);
+    m_settingsOverlay.Create(L"", WS_CHILD | WS_VISIBLE | SS_NOTIFY, CRect(0, 0, 0, 0), this, 0);
     m_settingsOverlay.ShowWindow(SW_HIDE);
-    m_settingsPanel.Create(L"", WS_CHILD | WS_VISIBLE | WS_BORDER, CRect(0, 0, 0, 0), this, 0);
+    m_settingsPanel.Create(L"", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_CLIPCHILDREN, CRect(0, 0, 0, 0), this, 0);
     m_settingsPanel.ShowWindow(SW_HIDE);
     m_settingsTitle.Create(L"Settings & Sample Data", WS_CHILD | WS_VISIBLE | SS_LEFT, CRect(0, 0, 0, 0), &m_settingsPanel, 0);
     m_settingsTitle.SetFont(CFont::FromHandle(Theme::TitleFont()));
@@ -843,6 +843,7 @@ HBRUSH CMainDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
     if (pWnd == &m_settingsOverlay) {
         static CBrush overlayBrush(RGB(8, 8, 12));
+        pDC->SetBkMode(OPAQUE);
         pDC->SetBkColor(RGB(8, 8, 12));
         return overlayBrush;
     }
@@ -988,12 +989,21 @@ void CMainDlg::ShowSettingsOverlay(bool show)
     if (show) {
         LayoutSettingsOverlay();
         ApplySettingsState();
-        m_settingsOverlay.BringWindowToTop();
-        m_settingsPanel.BringWindowToTop();
+<<<<<<< HEAD
+        // Ensure overlay and panel are above the rich edit/chat controls.
+        m_settingsOverlay.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        m_settingsPanel.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+
+        // Endpoint is the first field in this settings flow.
         m_settingsEndpoint.SetFocus();
     } else {
         SaveSettingsFromUI();
+        m_input.SetFocus();
     }
+
+    Invalidate(FALSE);
 }
 
 void CMainDlg::ApplySettingsState()
