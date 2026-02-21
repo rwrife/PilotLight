@@ -76,6 +76,8 @@ private:
     CStatic m_settingsOverlay;
     CStatic m_settingsPanel;
     CStatic m_settingsTitle;
+    CStatic m_settingsEndpointLabel;
+    CEdit m_settingsEndpoint;
     CStatic m_settingsApiKeyLabel;
     CEdit m_settingsApiKey;
     CButton m_settingsStubToggle;
