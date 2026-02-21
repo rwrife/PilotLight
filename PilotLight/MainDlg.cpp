@@ -989,7 +989,6 @@ void CMainDlg::ShowSettingsOverlay(bool show)
     if (show) {
         LayoutSettingsOverlay();
         ApplySettingsState();
-<<<<<<< HEAD
         // Ensure overlay and panel are above the rich edit/chat controls.
         m_settingsOverlay.SetWindowPos(&CWnd::wndTop, 0, 0, 0, 0,
             SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
