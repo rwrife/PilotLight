@@ -9,6 +9,17 @@
 
 std::wstring OpenAIClient::Endpoint()
 {
+    const auto& settings = SettingsStore::Get();
+    if (!settings.endpoint.empty()) {
+        return settings.endpoint;
+    }
+
+    wchar_t buffer[512] = {0};
+    GetEnvironmentVariableW(L"PILOTLIGHT_OPENAI_ENDPOINT", buffer, 512);
+    if (buffer[0] != L'\0') {
+        return buffer;
+    }
+
     return L"https://api.openai.com/v1/chat/completions";
 }
 
@@ -48,7 +59,7 @@ std::wstring OpenAIClient::SendHttpRequest(const std::wstring& jsonBody)
 {
     std::wstring apiKey = ApiKey();
     if (apiKey.empty()) {
-        return L"Error: PILOTLIGHT_OPENAI_API_KEY environment variable not set.";
+        return L"Error: OpenAI API key missing. Set it in Settings or via PILOTLIGHT_OPENAI_API_KEY.";
     }
 
     // Parse URL

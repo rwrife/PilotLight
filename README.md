@@ -29,12 +29,28 @@ PilotLight is built around a few core principles:
 
 PilotLight is designed to be compatible with the OpenAI Chat Completions API and similar endpoints.
 
-- API keys are provided at runtime via environment variables
+- API keys and endpoint overrides are provided at runtime (Settings panel or environment variables)
 - No secrets are embedded in the binary
 - Endpoint support can be extended to:
   - Azure OpenAI
   - Local gateways
   - Self-hosted proxies
+
+### Configuration and secrets
+
+Use the in-app **Settings** panel (gear icon) to configure:
+- **OpenAI Endpoint** (defaults to `https://api.openai.com/v1/chat/completions`)
+- **OpenAI API Key**
+- **Stub/sample-data mode**
+
+Settings are stored per-user under:
+- `%APPDATA%\\PilotLight\\settings.ini`
+
+Environment variable fallbacks are also supported:
+- `PILOTLIGHT_OPENAI_ENDPOINT`
+- `PILOTLIGHT_OPENAI_API_KEY`
+
+⚠️ Keep secrets local. Never commit API keys or personal endpoints to this repository.
 
 ## Plugins (minimal plumbing)
 
