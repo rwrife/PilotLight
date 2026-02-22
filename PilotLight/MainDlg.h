@@ -107,6 +107,8 @@ private:
     void LayoutControls();
     void AppendChatMessage(const ChatMessage& msg);
     void UpdateChatDisplay();
+    bool IsChatNearBottom() const;
+    void ScrollChatToBottomIfPinned(bool wasNearBottom);
     void SaveChatHistory();
     void LoadChatHistory();
     void LayoutSettingsOverlay();
