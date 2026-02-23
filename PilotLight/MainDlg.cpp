@@ -212,6 +212,12 @@ namespace {
     constexpr UINT ID_INPUT_PASTE = 0x5004;
     constexpr UINT ID_INPUT_DELETE = 0x5005;
     constexpr UINT ID_INPUT_SELECT_ALL = 0x5006;
+
+    bool HasHttpScheme(const CString& value)
+    {
+        return value.Left(7).CompareNoCase(L"http://") == 0 ||
+               value.Left(8).CompareNoCase(L"https://") == 0;
+    }
 }
 
 // Pre-translate message for tooltips + clipboard shortcuts in chat input
@@ -972,6 +978,10 @@ void CMainDlg::LayoutSettingsOverlay()
 
 void CMainDlg::ShowSettingsOverlay(bool show)
 {
+    if (!show && !SaveSettingsFromUI()) {
+        return;
+    }
+
     int cmd = show ? SW_SHOW : SW_HIDE;
     m_settingsOverlay.ShowWindow(cmd);
     m_settingsPanel.ShowWindow(cmd);
@@ -998,7 +1008,6 @@ void CMainDlg::ShowSettingsOverlay(bool show)
         // Endpoint is the first field in this settings flow.
         m_settingsEndpoint.SetFocus();
     } else {
-        SaveSettingsFromUI();
         m_input.SetFocus();
     }
 
@@ -1013,11 +1022,19 @@ void CMainDlg::ApplySettingsState()
     m_settingsStubToggle.SetCheck(settings.stubModeEnabled ? BST_CHECKED : BST_UNCHECKED);
 }
 
-void CMainDlg::SaveSettingsFromUI()
+bool CMainDlg::SaveSettingsFromUI()
 {
     CString endpoint;
     m_settingsEndpoint.GetWindowText(endpoint);
     endpoint.Trim();
+
+    if (!endpoint.IsEmpty() && !HasHttpScheme(endpoint)) {
+        AfxMessageBox(L"Endpoint must start with http:// or https://", MB_ICONWARNING | MB_OK);
+        m_settingsEndpoint.SetFocus();
+        m_settingsEndpoint.SetSel(0, -1);
+        return false;
+    }
+
     SettingsStore::SetEndpoint(endpoint.GetString());
 
     CString apiKey;
@@ -1027,6 +1044,7 @@ void CMainDlg::SaveSettingsFromUI()
 
     SettingsStore::SetStubModeEnabled(m_settingsStubToggle.GetCheck() == BST_CHECKED);
     SettingsStore::Save();
+    return true;
 }
 
 void CMainDlg::PopulateSampleHistory()
