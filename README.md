@@ -61,6 +61,12 @@ PilotLight includes optional, lightweight plugin discovery for narrow extension 
 
 See `docs/plugins.md` and `plugins/SamplePromptPrefixPlugin.cpp` for details.
 
+## Desktop copilot research
+
+PilotLight research notes comparing Microsoft Copilot/ChatGPT desktop patterns and our lightweight implementation decisions live in:
+
+- `docs/desktop-copilot-research.md`
+
 ## Agentic safety foundation
 
 A lightweight tool confirmation dialog + in-memory permission helper is included for future tool execution flows.
