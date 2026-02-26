@@ -597,9 +597,42 @@ void CMainDlg::OnClearHistory()
     }
 }
 
+bool CMainDlg::IsChatNearBottom()
+{
+    if (!m_chat.GetSafeHwnd()) {
+        return true;
+    }
+
+    SCROLLINFO si;
+    ZeroMemory(&si, sizeof(si));
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+
+    if (!m_chat.GetScrollInfo(SB_VERT, &si)) {
+        return true;
+    }
+
+    int maxScrollablePos = si.nMax - static_cast<int>(si.nPage) + 1;
+    if (maxScrollablePos < 0) {
+        maxScrollablePos = 0;
+    }
+
+    constexpr int kPinnedScrollSlack = 2;
+    return si.nPos >= (maxScrollablePos - kPinnedScrollSlack);
+}
+
+void CMainDlg::ScrollChatToBottomIfPinned(bool wasNearBottom)
+{
+    if (wasNearBottom) {
+        RichTextRenderer::ScrollToBottom(m_chat);
+    }
+}
+
 // Append chat message to display
 void CMainDlg::AppendChatMessage(const ChatMessage& msg)
 {
+    const bool wasNearBottom = IsChatNearBottom();
+
     if (msg.role == ChatMessage::Role::User) {
         RichTextRenderer::AppendBubble(m_chat, L"You: " + msg.content, Theme::Text, Theme::Accent);
     } else if (msg.role == ChatMessage::Role::Assistant) {
@@ -609,7 +642,7 @@ void CMainDlg::AppendChatMessage(const ChatMessage& msg)
         RichTextRenderer::AppendFormattedText(m_chat, L"System: " + msg.content + L"\r\n\r\n", Theme::Foreground);
     }
 
-    RichTextRenderer::ScrollToBottom(m_chat);
+    ScrollChatToBottomIfPinned(wasNearBottom);
 }
 
 // Update entire chat display
