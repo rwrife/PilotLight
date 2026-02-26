@@ -114,7 +114,7 @@ private:
     void LayoutSettingsOverlay();
     void ShowSettingsOverlay(bool show);
     void ApplySettingsState();
-    void SaveSettingsFromUI();
+    bool SaveSettingsFromUI();
     void PopulateSampleHistory();
     void RemoveAttachmentAtIndex(int index);
     std::wstring FindLatestAssistantMessage() const;
