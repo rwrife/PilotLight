@@ -6,6 +6,7 @@
 #include "FileUtils.h"
 #include "RichTextRenderer.h"
 #include <commctrl.h>
+#include <shellapi.h>
 #include <algorithm>
 #include <cstring>
 
@@ -80,6 +81,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialogEx)
     ON_LBN_DBLCLK(IDC_ATTACHMENT_LIST, &CMainDlg::OnAttachmentDblClick)
     ON_WM_NCCALCSIZE()
     ON_WM_NCACTIVATE()
+    ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 // Initialize dialog
@@ -89,6 +91,7 @@ BOOL CMainDlg::OnInitDialog()
 
     CBorderlessFrame::Apply(this);
     CBorderlessFrame::UpdateRegion(this, 16);
+    DragAcceptFiles(TRUE);
 
     // Load and set application icon
     HICON hIcon = (HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_PILOTLIGHT), 
@@ -476,7 +479,7 @@ void CMainDlg::OnSendMessage()
     m_input.SetWindowText(L"");
     m_pendingAttachments.clear();
     m_attachmentList.ResetContent();
-    m_tooltip.UpdateTipText(L"No pending files", &m_attachmentList);
+    UpdateAttachmentTooltip();
 
     // Get assistant response
     ChatMessage assistantMsg = m_chatEngine->GetAssistantResponse();
@@ -492,47 +495,84 @@ void CMainDlg::OnAttachFile()
     const wchar_t* filter = L"Supported Files\0*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.pdf;*.txt;*.doc;*.docx\0All Files\0*.*\0\0";
     std::vector<std::wstring> files = FileUtils::SelectFiles(m_hWnd, filter, true);
 
+    for (const auto& filePath : files) {
+        AddPendingAttachmentFromPath(filePath, true);
+    }
+
+    UpdateAttachmentTooltip();
+}
+
+bool CMainDlg::AddPendingAttachmentFromPath(const std::wstring& filePath, bool showErrorDialog)
+{
     const size_t maxFileSize = 10 * 1024 * 1024;  // 10MB
 
-    for (const auto& filePath : files) {
-        // Validate file type
-        if (!FileUtils::ValidateFileType(filePath)) {
+    if (!FileUtils::ValidateFileType(filePath)) {
+        if (showErrorDialog) {
             CString msg;
             msg.Format(L"File type not supported: %s", filePath.c_str());
             AfxMessageBox(msg);
-            continue;
         }
+        return false;
+    }
 
-        // Validate file size
-        if (!FileUtils::ValidateFileSize(filePath, maxFileSize)) {
+    if (!FileUtils::ValidateFileSize(filePath, maxFileSize)) {
+        if (showErrorDialog) {
             CString msg;
             msg.Format(L"File too large (max 10MB): %s", filePath.c_str());
             AfxMessageBox(msg);
-            continue;
         }
+        return false;
+    }
 
-        // Read and encode file
-        std::vector<BYTE> fileData;
-        if (!FileUtils::ReadFileToBuffer(filePath, fileData)) {
+    std::vector<BYTE> fileData;
+    if (!FileUtils::ReadFileToBuffer(filePath, fileData)) {
+        if (showErrorDialog) {
             CString msg;
             msg.Format(L"Failed to read file: %s", filePath.c_str());
             AfxMessageBox(msg);
-            continue;
         }
-
-        FileAttachment attachment;
-        attachment.filename = filePath.substr(filePath.find_last_of(L"\\") + 1);
-        attachment.mimeType = FileUtils::GetMimeType(filePath);
-        attachment.base64Data = FileUtils::EncodeBase64(fileData);
-        attachment.originalSize = fileData.size();
-
-        m_pendingAttachments.push_back(attachment);
-        m_attachmentList.AddString(attachment.filename.c_str());
+        return false;
     }
 
-    if (!m_pendingAttachments.empty()) {
-        m_tooltip.UpdateTipText(L"Double-click or press Delete to remove", &m_attachmentList);
+    FileAttachment attachment;
+    attachment.filename = filePath.substr(filePath.find_last_of(L"\\") + 1);
+    attachment.mimeType = FileUtils::GetMimeType(filePath);
+    attachment.base64Data = FileUtils::EncodeBase64(fileData);
+    attachment.originalSize = fileData.size();
+
+    m_pendingAttachments.push_back(attachment);
+    m_attachmentList.AddString(attachment.filename.c_str());
+    return true;
+}
+
+void CMainDlg::UpdateAttachmentTooltip()
+{
+    if (m_pendingAttachments.empty()) {
+        m_tooltip.UpdateTipText(L"No pending files", &m_attachmentList);
+        return;
     }
+
+    m_tooltip.UpdateTipText(L"Double-click, press Delete, or drag files here", &m_attachmentList);
+}
+
+void CMainDlg::OnDropFiles(HDROP hDropInfo)
+{
+    if (!hDropInfo) {
+        return;
+    }
+
+    const UINT fileCount = DragQueryFile(hDropInfo, 0xFFFFFFFF, nullptr, 0);
+    wchar_t filePath[MAX_PATH] = {};
+
+    for (UINT index = 0; index < fileCount; ++index) {
+        const UINT copied = DragQueryFile(hDropInfo, index, filePath, MAX_PATH);
+        if (copied > 0) {
+            AddPendingAttachmentFromPath(filePath, true);
+        }
+    }
+
+    DragFinish(hDropInfo);
+    UpdateAttachmentTooltip();
 }
 
 void CMainDlg::OnAttachmentDblClick()
@@ -585,7 +625,7 @@ void CMainDlg::RemoveAttachmentAtIndex(int index)
     m_attachmentList.DeleteString(index);
 
     if (m_pendingAttachments.empty()) {
-        m_tooltip.UpdateTipText(L"No pending files", &m_attachmentList);
+        UpdateAttachmentTooltip();
         return;
     }
 
