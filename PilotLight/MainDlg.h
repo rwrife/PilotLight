@@ -6,6 +6,7 @@
 #include <afxdialogex.h>
 #include <afxcmn.h>
 #include <afxrich.h>
+#include <shellapi.h>
 #include "resource.h"
 #include "ChatMessage.h"
 #include "Theme.h"
@@ -54,6 +55,7 @@ protected:
     afx_msg BOOL OnNcActivate(BOOL bActive);
     afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
     afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+    afx_msg void OnDropFiles(HDROP hDropInfo);
 
     DECLARE_MESSAGE_MAP()
 
@@ -107,15 +109,17 @@ private:
     void LayoutControls();
     void AppendChatMessage(const ChatMessage& msg);
     void UpdateChatDisplay();
-    bool IsChatNearBottom() const;
+    bool IsChatNearBottom();
     void ScrollChatToBottomIfPinned(bool wasNearBottom);
     void SaveChatHistory();
     void LoadChatHistory();
     void LayoutSettingsOverlay();
     void ShowSettingsOverlay(bool show);
     void ApplySettingsState();
-    void SaveSettingsFromUI();
+    bool SaveSettingsFromUI();
     void PopulateSampleHistory();
+    bool AddPendingAttachmentFromPath(const std::wstring& filePath, bool showErrorDialog);
+    void UpdateAttachmentTooltip();
     void RemoveAttachmentAtIndex(int index);
     std::wstring FindLatestAssistantMessage() const;
     
