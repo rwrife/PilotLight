@@ -662,7 +662,6 @@ bool CMainDlg::IsChatNearBottom()
     if (maxScrollablePos < 0) {
         maxScrollablePos = 0;
     }
-
     constexpr int kPinnedScrollSlack = 2;
     return si.nPos >= (maxScrollablePos - kPinnedScrollSlack);
 }
