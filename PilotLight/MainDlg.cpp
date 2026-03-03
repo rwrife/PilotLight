@@ -857,6 +857,13 @@ void CMainDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
     
     // Draw the button
     Theme::DrawFramelessButton(pDC, rect, (LPCTSTR)text, state, isCloseButton);
+
+    // Draw a visible keyboard focus cue for accessibility.
+    if (lpDrawItemStruct->itemState & ODS_FOCUS) {
+        CRect focusRect(rect);
+        focusRect.DeflateRect(3, 3);
+        pDC->DrawFocusRect(&focusRect);
+    }
 }
 
 // Mouse move handler for hover effects
