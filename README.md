@@ -72,3 +72,7 @@ PilotLight research notes comparing Microsoft Copilot/ChatGPT desktop patterns a
 A lightweight tool confirmation dialog + in-memory permission helper is included for future tool execution flows.
 
 See `docs/tool-confirmation.md` for usage and decision model.
+
+## UX QA checklist
+
+Use `docs/ux-qa-checklist.md` after UI/chat-chrome updates to quickly validate shortcuts, attachment flow, layout behavior, DPI legibility, and focus/accessibility cues.
