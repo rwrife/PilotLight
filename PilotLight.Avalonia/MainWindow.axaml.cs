@@ -35,6 +35,7 @@ public partial class MainWindow : Window
 
     private void OnClosing(object? sender, WindowClosingEventArgs e)
     {
+        _viewModel.CancelPendingOperations();
         _viewModel.PersistAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 

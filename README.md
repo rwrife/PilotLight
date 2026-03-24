@@ -35,20 +35,20 @@ This repository has been migrated from a legacy Windows-only MFC client to a mod
 
 ```bash
 dotnet restore
-dotnet run --project /home/runner/work/PilotLight/PilotLight/PilotLight.Avalonia/PilotLight.Avalonia.csproj
+dotnet run --project PilotLight.Avalonia/PilotLight.Avalonia.csproj
 ```
 
 ### Build
 
 ```bash
-dotnet build /home/runner/work/PilotLight/PilotLight/PilotLight.slnx -c Release
+dotnet build PilotLight.slnx -c Release
 ```
 
 ### Publish for Windows
 
 ```bash
-dotnet publish /home/runner/work/PilotLight/PilotLight/PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-x64 --self-contained false -o ./artifacts/win-x64
-dotnet publish /home/runner/work/PilotLight/PilotLight/PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-arm64 --self-contained false -o ./artifacts/win-arm64
+dotnet publish PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-x64 --self-contained false -o ./artifacts/win-x64
+dotnet publish PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-arm64 --self-contained false -o ./artifacts/win-arm64
 ```
 
 ## Settings

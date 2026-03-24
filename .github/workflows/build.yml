@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: windows-latest
@@ -19,17 +22,11 @@ jobs:
       - name: Restore
         run: dotnet restore /p:RuntimeIdentifiers="win-x64;win-arm64"
 
-      - name: Build (x64)
-        run: dotnet build /p:Configuration=Release /p:RuntimeIdentifier=win-x64 --no-restore
-
-      - name: Build (ARM64)
-        run: dotnet build /p:Configuration=Release /p:RuntimeIdentifier=win-arm64 --no-restore
-
       - name: Publish (x64)
-        run: dotnet publish /p:Configuration=Release /p:RuntimeIdentifier=win-x64 --self-contained false -o artifacts/win-x64
+        run: dotnet publish PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-x64 --self-contained false -o artifacts/win-x64 --no-restore
 
       - name: Publish (ARM64)
-        run: dotnet publish /p:Configuration=Release /p:RuntimeIdentifier=win-arm64 --self-contained false -o artifacts/win-arm64
+        run: dotnet publish PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-arm64 --self-contained false -o artifacts/win-arm64 --no-restore
 
       - name: Upload artifacts (x64)
         uses: actions/upload-artifact@v4

@@ -13,6 +13,7 @@ public sealed class MainWindowViewModel : ObservableObject
     private readonly IChatHistoryStore _chatHistoryStore;
     private readonly IOpenAIChatClient _chatClient;
     private readonly IClipboardService _clipboardService;
+    private readonly CancellationTokenSource _lifetimeCts = new();
 
     private ChatSessionItemViewModel? _selectedSession;
     private string _draftMessage = string.Empty;
@@ -184,6 +185,14 @@ public sealed class MainWindowViewModel : ObservableObject
         await _chatHistoryStore.SaveAsync(Sessions.Select(s => s.Model).ToList(), cancellationToken);
     }
 
+    public void CancelPendingOperations()
+    {
+        if (!_lifetimeCts.IsCancellationRequested)
+        {
+            _lifetimeCts.Cancel();
+        }
+    }
+
     private void CreateNewChat()
     {
         var session = new ChatSession
@@ -199,6 +208,8 @@ public sealed class MainWindowViewModel : ObservableObject
 
     private async Task SendMessageAsync()
     {
+        var cancellationToken = _lifetimeCts.Token;
+
         if (SelectedSession is null)
         {
             return;
@@ -243,14 +254,14 @@ public sealed class MainWindowViewModel : ObservableObject
             var messageBuffer = SelectedSession.Model.Messages.ToList();
             if (attachments.Count > 0)
             {
-                var attachmentContext = await FileAttachmentFormatter.BuildAttachmentContextAsync(attachments, CancellationToken.None);
+                var attachmentContext = await FileAttachmentFormatter.BuildAttachmentContextAsync(attachments, cancellationToken);
                 if (!string.IsNullOrWhiteSpace(attachmentContext))
                 {
                     messageBuffer.Add(new ChatMessage { Role = ChatRole.System, Content = attachmentContext });
                 }
             }
 
-            var response = await _chatClient.GetAssistantResponseAsync(BuildSettings(), messageBuffer, CancellationToken.None);
+            var response = await _chatClient.GetAssistantResponseAsync(BuildSettings(), messageBuffer, cancellationToken);
             SelectedSession.Model.Messages.Add(new ChatMessage
             {
                 Role = ChatRole.Assistant,
@@ -258,6 +269,10 @@ public sealed class MainWindowViewModel : ObservableObject
             });
             SelectedSession.Model.UpdatedAt = DateTimeOffset.UtcNow;
             StatusText = "Response received.";
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText = "Request canceled.";
         }
         catch (Exception ex)
         {
@@ -275,13 +290,13 @@ public sealed class MainWindowViewModel : ObservableObject
             NotifyCommands();
             SelectedSession.RefreshFromModel();
             RefreshCurrentMessages();
-            await PersistAsync(CancellationToken.None);
+            await PersistAsync(cancellationToken);
         }
     }
 
     private async Task SaveSettingsAsync()
     {
-        await _settingsStore.SaveAsync(BuildSettings(), CancellationToken.None);
+        await _settingsStore.SaveAsync(BuildSettings(), _lifetimeCts.Token);
         StatusText = "Settings saved.";
     }
 
@@ -292,7 +307,7 @@ public sealed class MainWindowViewModel : ObservableObject
             return;
         }
 
-        await _clipboardService.SetTextAsync(message.Content, CancellationToken.None);
+        await _clipboardService.SetTextAsync(message.Content, _lifetimeCts.Token);
         StatusText = "Copied message to clipboard.";
     }
 

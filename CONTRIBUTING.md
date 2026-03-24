@@ -9,8 +9,8 @@
 
 ```bash
 dotnet restore
-dotnet build /home/runner/work/PilotLight/PilotLight/PilotLight.slnx -c Debug
-dotnet run --project /home/runner/work/PilotLight/PilotLight/PilotLight.Avalonia/PilotLight.Avalonia.csproj
+dotnet build PilotLight.slnx -c Debug
+dotnet run --project PilotLight.Avalonia/PilotLight.Avalonia.csproj
 ```
 
 ## Pull requests
