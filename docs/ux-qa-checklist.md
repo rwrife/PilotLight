@@ -1,37 +1,39 @@
-# PilotLight UX QA Checklist
+# PilotLight UX QA Checklist (Avalonia)
 
-Use this quick checklist after changes to chat chrome, input controls, or attachment flow.
+Use this checklist after changes to chat UX, settings, session handling, and attachments.
 
-## Input field behavior
+## Chat input and send behavior
 
-- [ ] `Ctrl+C`, `Ctrl+V`, `Ctrl+X`, `Ctrl+A`, and `Ctrl+Z` work in the chat input.
-- [ ] `Shift+Insert` pastes and `Shift+Delete` cuts.
-- [ ] Right-click in the input shows context actions (Undo/Cut/Copy/Paste/Delete/Select All).
-- [ ] Sending with `Enter` still works as expected (without breaking multiline behavior).
+- [ ] Text input supports copy/paste/cut/select-all shortcuts.
+- [ ] Sending a message appends user message and assistant response in order.
+- [ ] Empty sends are blocked unless attachments exist.
+- [ ] Status text updates for loading/success/failure.
 
-## Attachments and send controls
+## Session management
 
-- [ ] Attach button opens file picker and selected files appear in the pending list.
-- [ ] Drag-and-drop onto the window adds attachments.
-- [ ] Double-click or delete/backspace on selected attachment removes it.
-- [ ] Send button, attach button, and copy-last-response button show normal/hover/pressed/focus states.
+- [ ] New Chat creates a fresh session.
+- [ ] Session list selection changes visible message history.
+- [ ] Session title initializes from first message.
+- [ ] Session timestamps update after sends.
 
-## Conversation and layout behavior
+## Attachments
 
-- [ ] Chat autoscroll works for new assistant/user messages.
-- [ ] If the user has scrolled up, new messages do not yank scroll unexpectedly.
-- [ ] Window resize keeps title bar, chat surface, input area, and settings controls aligned.
-- [ ] Settings panel blocks background chat interactions while open.
+- [ ] Attach button opens file picker.
+- [ ] Selected files appear in pending attachments list.
+- [ ] Attachments are included as context in the outgoing request path.
 
-## DPI and accessibility sanity check
+## Settings and auth
 
-Run at 100%, 150%, and 200% Windows scaling (or closest available):
+- [ ] Endpoint/model values save and reload.
+- [ ] API key mode and OAuth token mode toggle correctly.
+- [ ] Credential fields are masked.
 
-- [ ] Text remains legible in title bar, chat history, input, and settings.
-- [ ] Buttons remain clickable with consistent hit targets.
-- [ ] Focus indicators are visible for keyboard navigation.
+## Response interaction
 
-## Regression notes
+- [ ] Copy button copies message content to clipboard.
+- [ ] Long responses wrap and remain readable.
 
-- [ ] Build passes locally (when on Windows) and on GitHub Actions.
-- [ ] Any intentional UX deviations are documented in PR notes.
+## Build and regression
+
+- [ ] `dotnet build` succeeds locally.
+- [ ] GitHub Actions x64 and ARM64 build artifacts succeed.

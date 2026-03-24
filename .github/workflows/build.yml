@@ -11,17 +11,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
-      - name: Build Release (x86)
-        run: |
-          msbuild PilotLight/PilotLight.vcxproj /p:Configuration=Release /p:Platform=Win32
-        shell: cmd
+      - name: Restore
+        run: dotnet restore /p:RuntimeIdentifiers="win-x64;win-arm64"
 
-      - name: Upload EXE (x86)
+      - name: Build (x64)
+        run: dotnet build /p:Configuration=Release /p:RuntimeIdentifier=win-x64 --no-restore
+
+      - name: Build (ARM64)
+        run: dotnet build /p:Configuration=Release /p:RuntimeIdentifier=win-arm64 --no-restore
+
+      - name: Publish (x64)
+        run: dotnet publish /p:Configuration=Release /p:RuntimeIdentifier=win-x64 --self-contained false -o artifacts/win-x64
+
+      - name: Publish (ARM64)
+        run: dotnet publish /p:Configuration=Release /p:RuntimeIdentifier=win-arm64 --self-contained false -o artifacts/win-arm64
+
+      - name: Upload artifacts (x64)
         uses: actions/upload-artifact@v4
         with:
-          name: PilotLight-x86
-          path: |
-            **/Release/PilotLight.exe
+          name: PilotLight-win-x64
+          path: artifacts/win-x64/**
+
+      - name: Upload artifacts (arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: PilotLight-win-arm64
+          path: artifacts/win-arm64/**

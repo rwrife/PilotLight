@@ -1,5 +1,18 @@
-x64
-PilotLight/x64
-PilotLight/PilotLight
-.vs
+# Build artifacts
+bin/
+obj/
+.vs/
+
+# Legacy local folders
+x64/
+
+# User-specific files
 *.user
+*.suo
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

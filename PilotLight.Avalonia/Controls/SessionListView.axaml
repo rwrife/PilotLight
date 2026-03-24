@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PilotLight.Avalonia.Controls.SessionListView">
+  <Border Classes="card">
+    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+      <Button Content="+ New Chat" Classes="primary" Command="{Binding NewChatCommand}" />
+      <ListBox Grid.Row="1" ItemsSource="{Binding Sessions}" SelectedItem="{Binding SelectedSession}">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Border Margin="0,0,0,6" Padding="8" CornerRadius="8" Background="#202736">
+              <StackPanel>
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding UpdatedText}" Foreground="#AAB3C5" FontSize="11" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Grid>
+  </Border>
+</UserControl>

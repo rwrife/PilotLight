@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PilotLight.Avalonia.Controls"
+             x:Class="PilotLight.Avalonia.Controls.ChatMessageView">
+  <Border Margin="0,0,0,10"
+          Padding="10"
+          CornerRadius="10"
+          Background="{Binding IsUser, Converter={x:Static controls:BoolToBrushConverter.Instance}, ConverterParameter='user'}">
+    <StackPanel Spacing="8">
+      <DockPanel>
+        <TextBlock Text="{Binding RoleLabel}" FontWeight="SemiBold" DockPanel.Dock="Left" />
+        <Button Content="Copy"
+                HorizontalAlignment="Right"
+                Command="{Binding DataContext.CopyMessageCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                CommandParameter="{Binding}" />
+      </DockPanel>
+      <TextBlock Text="{Binding Content}" TextWrapping="Wrap" />
+      <ItemsControl ItemsSource="{Binding Attachments}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding DisplayName}" Foreground="#AAB3C5" FontSize="11" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Text="{Binding Timestamp}" Foreground="#AAB3C5" FontSize="11" HorizontalAlignment="Right" />
+    </StackPanel>
+  </Border>
+</UserControl>

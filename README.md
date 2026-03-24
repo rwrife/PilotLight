@@ -1,78 +1,65 @@
 # <img src="logo.png" width="32px"> PilotLight
 
-PilotLight is an extremely lightweight, native Windows chat client built in C++ with MFC, designed to deliver modern usability with minimal memory, CPU, and disk footprint.
+PilotLight is a lightweight cross-platform desktop chat client built with **C# + Avalonia UI**.
 
-The project intentionally avoids heavy frameworks, web runtimes, and background services in favor of a fast-starting, low-overhead native application.
+## What changed
 
-## Project Goals
+This repository has been migrated from a legacy Windows-only MFC client to a modern Avalonia-based app focused on low dependency count and clean UX.
 
-PilotLight is built around a few core principles:
-- Minimal resource usage
-  - Single native executable
-  - Low idle memory footprint
-  - Near-zero CPU usage when idle
-- Native Windows experience
-  - Fast startup
-  - No web engines or runtime dependencies
-  - High-DPI aware
-  - Proper system integration
-- Modern but simple UI
-  - Borderless window with rounded corners
-  - Dark theme
-  - Rich text chat history
-  - Clean, distraction-free layout
-- LLM-agnostic backend
- - OpenAI-compatible API design
-  - Works with OpenAI, Azure OpenAI, or local proxies
+## Features
 
-  ## LLM Integration
+- Modern dark-themed chat interface
+- Chat history with multiple sessions and quick new-chat creation
+- OpenAI-compatible chat endpoint support
+- Authentication options:
+  - OpenAI API Key (Bearer)
+  - OpenAI OAuth-style Access Token (Bearer)
+- File attachments included as contextual text previews where supported
+- Copy assistant or user responses from the conversation
+- Per-user persisted settings and chat history
+- Windows x64 + ARM64 CI builds
 
-PilotLight is designed to be compatible with the OpenAI Chat Completions API and similar endpoints.
+## Tech stack
 
-- API keys and endpoint overrides are provided at runtime (Settings panel or environment variables)
-- No secrets are embedded in the binary
-- Endpoint support can be extended to:
-  - Azure OpenAI
-  - Local gateways
-  - Self-hosted proxies
+- .NET 8
+- Avalonia UI 11
+- Minimal custom MVVM infrastructure (no heavy frameworks)
 
-### Configuration and secrets
+## Getting started
 
-Use the in-app **Settings** panel (gear icon) to configure:
-- **OpenAI Endpoint** (defaults to `https://api.openai.com/v1/chat/completions`)
-- **OpenAI API Key**
-- **Stub/sample-data mode**
+### Prerequisites
 
-Settings are stored per-user under:
-- `%APPDATA%\\PilotLight\\settings.ini`
+- .NET SDK 8.0+
 
-Environment variable fallbacks are also supported:
-- `PILOTLIGHT_OPENAI_ENDPOINT`
-- `PILOTLIGHT_OPENAI_API_KEY`
+### Run locally
 
-⚠️ Keep secrets local. Never commit API keys or personal endpoints to this repository.
+```bash
+dotnet restore
+dotnet run --project /home/runner/work/PilotLight/PilotLight/PilotLight.Avalonia/PilotLight.Avalonia.csproj
+```
 
-## Plugins (minimal plumbing)
+### Build
 
-PilotLight includes optional, lightweight plugin discovery for narrow extension hooks.
+```bash
+dotnet build /home/runner/work/PilotLight/PilotLight/PilotLight.slnx -c Release
+```
 
-- Discovery path: `<PilotLight.exe dir>\\plugins\\*.dll`
-- Current hooks: user prompt transform (`PilotLight_TransformUserPrompt`) and assistant response transform (`PilotLight_TransformAssistantResponse`)
+### Publish for Windows
 
-See `docs/plugins.md` and `plugins/SamplePromptPrefixPlugin.cpp` for details.
+```bash
+dotnet publish /home/runner/work/PilotLight/PilotLight/PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-x64 --self-contained false -o ./artifacts/win-x64
+dotnet publish /home/runner/work/PilotLight/PilotLight/PilotLight.Avalonia/PilotLight.Avalonia.csproj -c Release -r win-arm64 --self-contained false -o ./artifacts/win-arm64
+```
 
-## Desktop copilot research
+## Settings
 
-PilotLight research notes comparing Microsoft Copilot/ChatGPT desktop patterns and our lightweight implementation decisions live in:
+Use the Settings panel in the app to configure:
 
-- `docs/desktop-copilot-research.md`
+- Endpoint (default: `https://api.openai.com/v1/chat/completions`)
+- Model
+- Authentication mode (API key or OAuth access token)
+- Credential/token value
 
-## Agentic safety foundation
+Settings and history are stored per-user in the application data folder under `PilotLight`.
 
-A lightweight tool confirmation dialog + in-memory permission helper is included for future tool execution flows.
-
-See `docs/tool-confirmation.md` for usage and decision model.
-
-## UX QA checklist
-
-Use `docs/ux-qa-checklist.md` after UI/chat-chrome updates to quickly validate shortcuts, attachment flow, layout behavior, DPI legibility, and focus/accessibility cues.
+⚠️ Never commit keys or tokens.

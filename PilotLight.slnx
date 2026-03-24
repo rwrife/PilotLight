@@ -1,6 +1,8 @@
 <Solution>
   <Configurations>
     <Platform Name="x64" />
+    <Platform Name="ARM64" />
   </Configurations>
-  <Project Path="PilotLight/PilotLight.vcxproj" Id="e3a2a3b1-5a9c-4f0a-9a4e-7d3b9a6f7c01" />
+  <Project Path="PilotLight.Core/PilotLight.Core.csproj" Id="4b57295b-2e44-4674-b894-1e2f0e93a98f" />
+  <Project Path="PilotLight.Avalonia/PilotLight.Avalonia.csproj" Id="6cf91247-cfbf-4f31-8f57-f8e9959af8da" />
 </Solution>

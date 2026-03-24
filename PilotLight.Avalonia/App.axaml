@@ -1,0 +1,23 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PilotLight.Avalonia.App"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="Window">
+      <Setter Property="Background" Value="#0F1117" />
+      <Setter Property="Foreground" Value="#F3F6FF" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="#171B25" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="BorderBrush" Value="#2B3140" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="12" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#3B82F6" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+  </Application.Styles>
+</Application>

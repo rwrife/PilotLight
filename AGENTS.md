@@ -1,4 +1,7 @@
+# Build
 
-# Build 
+- Preferred local build command:
+  - `dotnet build /home/runner/work/PilotLight/PilotLight/PilotLight.slnx -c Debug`
 
-- Always run ```msbuild PilotLight.slnx /p:Configuration=Debug /p:Platform=x64 /t:Build``` from the root folder to build the application on x86.
+- Legacy instruction retained for compatibility with prior automation:
+  - `msbuild PilotLight.slnx /p:Configuration=Debug /p:Platform=x64 /t:Build`

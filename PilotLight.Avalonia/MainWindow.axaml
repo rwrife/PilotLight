@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:PilotLight.Avalonia.Controls"
+        xmlns:vm="clr-namespace:PilotLight.Avalonia.ViewModels"
+        mc:Ignorable="d"
+        x:Class="PilotLight.Avalonia.MainWindow"
+        Title="PilotLight"
+        Width="1280"
+        Height="820"
+        MinWidth="980"
+        MinHeight="640"
+        d:DataContext="{d:DesignInstance vm:MainWindowViewModel}">
+  <Grid Margin="12" ColumnDefinitions="260,*,320" ColumnSpacing="12" RowDefinitions="*">
+    <controls:SessionListView Grid.Column="0" />
+
+    <Border Grid.Column="1" Classes="card">
+      <Grid RowDefinitions="*,Auto,Auto" RowSpacing="10">
+        <ScrollViewer Grid.Row="0">
+          <ItemsControl ItemsSource="{Binding CurrentMessages}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <controls:ChatMessageView />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <Border Grid.Row="1" IsVisible="{Binding HasPendingAttachments}" BorderBrush="#2B3140" BorderThickness="1" CornerRadius="8" Padding="8">
+          <ItemsControl ItemsSource="{Binding PendingAttachments}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" ItemHeight="28" ItemWidth="220" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Margin="4" Padding="6,4" CornerRadius="6" Background="#202736">
+                  <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" MaxWidth="190" />
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Border>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+          <Button Content="Attach" Click="OnAttachClick" />
+          <TextBox Grid.Column="1" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" MaxHeight="160" Watermark="Message PilotLight..." Text="{Binding DraftMessage}" />
+          <Button Grid.Column="2" Content="Send" Classes="primary" Command="{Binding SendMessageCommand}" IsEnabled="{Binding CanSendMessage}" />
+        </Grid>
+      </Grid>
+    </Border>
+
+    <Border Grid.Column="2" Classes="card">
+      <ScrollViewer>
+        <StackPanel Spacing="8">
+          <TextBlock Text="Settings" FontSize="18" FontWeight="SemiBold" />
+
+          <TextBlock Text="Endpoint" />
+          <TextBox Text="{Binding Endpoint}" Watermark="https://api.openai.com/v1/chat/completions" />
+
+          <TextBlock Text="Model" />
+          <TextBox Text="{Binding Model}" Watermark="gpt-4.1-mini" />
+
+          <TextBlock Text="Authentication" />
+          <ComboBox ItemsSource="{Binding AuthModes}" SelectedItem="{Binding SelectedAuthMode}" />
+
+          <TextBlock Text="API Key" IsVisible="{Binding IsApiKeyMode}" />
+          <TextBox Text="{Binding ApiKey}" IsVisible="{Binding IsApiKeyMode}" PasswordChar="*" />
+
+          <TextBlock Text="OAuth Access Token" IsVisible="{Binding IsOAuthMode}" />
+          <TextBox Text="{Binding OAuthAccessToken}" IsVisible="{Binding IsOAuthMode}" PasswordChar="*" />
+
+          <Button Content="Save Settings" Command="{Binding SaveSettingsCommand}" />
+
+          <TextBlock Text="Status" FontSize="14" FontWeight="SemiBold" Margin="0,8,0,0" />
+          <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" Foreground="#AAB3C5" />
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</Window>
